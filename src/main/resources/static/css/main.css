@@ -1,0 +1,63 @@
+.image-container {
+    min-height: 400px;
+    border: 2px dashed #ccc;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #666;
+}
+
+.upload-placeholder i {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+#image {
+    max-width: 100%;
+    max-height: 600px;
+}
+
+.color-btn {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.color-btn.active {
+    border: 2px solid #000;
+}
+
+.img-container img {
+    max-width: 100%;
+}
+
+/* Cropper.js customization */
+.cropper-view-box,
+.cropper-face {
+    border-radius: 0;
+}
+
+.cropper-line {
+    background-color: #fff;
+}
+
+.cropper-point {
+    background-color: #fff;
+    width: 8px;
+    height: 8px;
+}
+
+/* Drag and drop highlight */
+.drag-over {
+    border-color: #2196F3;
+    background-color: rgba(33, 150, 243, 0.1);
+}
