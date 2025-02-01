@@ -1,18 +1,28 @@
+
+
 package com.example.idphotogenerator.service;
 
-import org.opencv.core.*;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
-import org.springframework.stereotype.Service;
-import nu.pattern.OpenCV;
-
-import jakarta.annotation.PostConstruct;
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.awt.Color;
+
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+import org.springframework.stereotype.Service;
+
+import jakarta.annotation.PostConstruct;
+import nu.pattern.OpenCV;
 
 @Service
 public class ImageProcessingService {
@@ -26,45 +36,87 @@ public class ImageProcessingService {
         // Convert byte array to Mat
         Mat image = bytesToMat(imageData);
         
-        // Convert to HSV color space
-        Mat hsv = new Mat();
-        Imgproc.cvtColor(image, hsv, Imgproc.COLOR_BGR2HSV);
-        
-        // Create mask for skin color detection
-        Scalar lowerBound = new Scalar(0, 20, 70);
-        Scalar upperBound = new Scalar(20, 255, 255);
+        // Resize image if it's too large (for better performance)
+        Mat resized = new Mat();
+        double scale = 1.0;
+        if (image.width() > 1000 || image.height() > 1000) {
+            scale = 1000.0 / Math.max(image.width(), image.height());
+            Imgproc.resize(image, resized, new Size(), scale, scale, Imgproc.INTER_AREA);
+        } else {
+            image.copyTo(resized);
+        }
+
+        // Create a rectangle for initial segmentation
+        Rect rect = new Rect(
+            resized.cols() / 20,      // x
+            resized.rows() / 20,      // y
+            resized.cols() * 9 / 10,  // width
+            resized.rows() * 9 / 10   // height
+        );
+
+        // Prepare masks and temporary arrays for GrabCut
         Mat mask = new Mat();
-        Core.inRange(hsv, lowerBound, upperBound, mask);
+        Mat bgModel = new Mat();
+        Mat fgModel = new Mat();
+        Mat source = new Mat(1, 1, CvType.CV_8U, new Scalar(Imgproc.GC_PR_FGD));
         
-        // Apply morphological operations to improve mask
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
-        Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_CLOSE, kernel);
-        Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_OPEN, kernel);
+        // Initialize mask
+        mask.create(resized.size(), CvType.CV_8UC1);
+        mask.setTo(new Scalar(Imgproc.GC_BGD));
         
-        // Find the largest contour (assumed to be the person)
-        Mat hierarchy = new Mat();
-        java.util.List<MatOfPoint> contours = new java.util.ArrayList<>();
-        Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        // Set the rectangular area to probable foreground
+        Mat maskROI = new Mat(mask, rect);
+        maskROI.setTo(new Scalar(Imgproc.GC_PR_FGD));
+
+        // Run GrabCut algorithm
+        Imgproc.grabCut(resized, mask, rect, bgModel, fgModel, 5, Imgproc.GC_INIT_WITH_RECT);
+
+        // Create binary mask for foreground
+        Mat binaryMask = new Mat();
+        Core.compare(mask, source, binaryMask, Core.CMP_EQ);
+
+        // Refine the binary mask
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
+        Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_CLOSE, kernel);
+        Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_OPEN, kernel);
+
+        // Create output image
+        Mat result = new Mat();
+        resized.copyTo(result, binaryMask);
+
+        // If we resized earlier, resize back to original size
+        if (scale != 1.0) {
+            Mat finalResult = new Mat();
+            Imgproc.resize(result, finalResult, image.size(), 0, 0, Imgproc.INTER_CUBIC);
+            result = finalResult;
+        }
+
+        // Convert to RGBA to support transparency
+        Mat rgba = new Mat();
+        Imgproc.cvtColor(result, rgba, Imgproc.COLOR_BGR2BGRA);
         
-        if (!contours.isEmpty()) {
-            // Find the largest contour
-            MatOfPoint largestContour = contours.get(0);
-            for (MatOfPoint contour : contours) {
-                if (Imgproc.contourArea(contour) > Imgproc.contourArea(largestContour)) {
-                    largestContour = contour;
+        // Set background pixels to transparent
+        byte[] pixels = new byte[4];
+        for (int i = 0; i < rgba.rows(); i++) {
+            for (int j = 0; j < rgba.cols(); j++) {
+                rgba.get(i, j, pixels);
+                if (pixels[0] == 0 && pixels[1] == 0 && pixels[2] == 0) {
+                    pixels[3] = 0; // Set alpha channel to transparent
+                    rgba.put(i, j, pixels);
                 }
             }
-            
-            // Create new mask with only the largest contour
-            mask.setTo(new Scalar(0));
-            Imgproc.drawContours(mask, java.util.Arrays.asList(largestContour), -1, new Scalar(255), -1);
         }
-        
-        // Apply the mask to the original image
-        Mat result = new Mat();
-        image.copyTo(result, mask);
-        
-        return matToBytes(result);
+
+        // Release resources
+        image.release();
+        resized.release();
+        mask.release();
+        bgModel.release();
+        fgModel.release();
+        binaryMask.release();
+        result.release();
+
+        return matToBytes(rgba);
     }
 
     public byte[] changeBackground(byte[] imageData, String backgroundColor) throws IOException {
