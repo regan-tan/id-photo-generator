@@ -1,5 +1,4 @@
 
-
 package com.example.idphotogenerator.service;
 
 import java.awt.Color;
@@ -35,7 +34,7 @@ public class ImageProcessingService {
     public byte[] removeBackground(byte[] imageData) throws IOException {
         // Convert byte array to Mat
         Mat image = bytesToMat(imageData);
-        
+
         // Resize image if it's too large (for better performance)
         Mat resized = new Mat();
         double scale = 1.0;
@@ -48,10 +47,10 @@ public class ImageProcessingService {
 
         // Create a rectangle for initial segmentation
         Rect rect = new Rect(
-            resized.cols() / 20,      // x
-            resized.rows() / 20,      // y
-            resized.cols() * 9 / 10,  // width
-            resized.rows() * 9 / 10   // height
+                resized.cols() / 20, // x
+                resized.rows() / 20, // y
+                resized.cols() * 9 / 10, // width
+                resized.rows() * 9 / 10 // height
         );
 
         // Prepare masks and temporary arrays for GrabCut
@@ -59,11 +58,11 @@ public class ImageProcessingService {
         Mat bgModel = new Mat();
         Mat fgModel = new Mat();
         Mat source = new Mat(1, 1, CvType.CV_8U, new Scalar(Imgproc.GC_PR_FGD));
-        
+
         // Initialize mask
         mask.create(resized.size(), CvType.CV_8UC1);
         mask.setTo(new Scalar(Imgproc.GC_BGD));
-        
+
         // Set the rectangular area to probable foreground
         Mat maskROI = new Mat(mask, rect);
         maskROI.setTo(new Scalar(Imgproc.GC_PR_FGD));
@@ -91,10 +90,14 @@ public class ImageProcessingService {
             result = finalResult;
         }
 
-        // Convert to RGBA to support transparency
-        Mat rgba = new Mat();
-        Imgproc.cvtColor(result, rgba, Imgproc.COLOR_BGR2BGRA);
-        
+        // Convert from BGR to RGB
+Imgproc.cvtColor(result, result, Imgproc.COLOR_BGR2RGB);
+
+// Convert to RGBA to support transparency
+Mat rgba = new Mat();
+Imgproc.cvtColor(result, rgba, Imgproc.COLOR_RGB2RGBA);
+
+
         // Set background pixels to transparent
         byte[] pixels = new byte[4];
         for (int i = 0; i < rgba.rows(); i++) {
@@ -122,21 +125,21 @@ public class ImageProcessingService {
     public byte[] changeBackground(byte[] imageData, String backgroundColor) throws IOException {
         // First remove the background
         byte[] transparentImage = removeBackground(imageData);
-        
+
         // Convert the color string to RGB values
         Color color = Color.decode(backgroundColor);
-        
+
         // Create a new image with the specified background color
         BufferedImage original = ImageIO.read(new ByteArrayInputStream(transparentImage));
         BufferedImage result = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_RGB);
-        
+
         // Fill the background with the specified color
         for (int x = 0; x < result.getWidth(); x++) {
             for (int y = 0; y < result.getHeight(); y++) {
                 result.setRGB(x, y, color.getRGB());
             }
         }
-        
+
         // Copy the foreground from the original image
         for (int x = 0; x < original.getWidth(); x++) {
             for (int y = 0; y < original.getHeight(); y++) {
@@ -146,7 +149,7 @@ public class ImageProcessingService {
                 }
             }
         }
-        
+
         // Convert the result back to bytes
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(result, "png", baos);
@@ -156,19 +159,19 @@ public class ImageProcessingService {
     private Mat bytesToMat(byte[] imageData) throws IOException {
         // Convert byte array to BufferedImage
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageData));
-        
+
         // Convert BufferedImage to Mat
         Mat mat = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC3);
-        byte[] data = new byte[image.getWidth() * image.getHeight() * (int)mat.elemSize()];
+        byte[] data = new byte[image.getWidth() * image.getHeight() * (int) mat.elemSize()];
         int[] dataBuff = new int[image.getWidth() * image.getHeight()];
         image.getRGB(0, 0, image.getWidth(), image.getHeight(), dataBuff, 0, image.getWidth());
-        
+
         for (int i = 0; i < dataBuff.length; i++) {
             data[i * 3] = (byte) ((dataBuff[i] >> 16) & 0xFF);
             data[i * 3 + 1] = (byte) ((dataBuff[i] >> 8) & 0xFF);
             data[i * 3 + 2] = (byte) ((dataBuff[i]) & 0xFF);
         }
-        
+
         mat.put(0, 0, data);
         return mat;
     }
