@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
     let cropper = null;
-    let imageHistory = [];
     const image = document.getElementById('image');
     const fileInput = document.getElementById('fileInput');
     const cropBtn = document.getElementById('cropBtn');
@@ -9,29 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const placeholder = document.getElementById('placeholder');
     const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
     const cropImage = document.getElementById('cropImage');
-    const undoBtn = document.getElementById('undoBtn');
-
-    function saveImageState() {
-        imageHistory.push(image.src);
-        if (imageHistory.length > 10) {
-            imageHistory.shift(); // Limit history to last 10 states
-        }
-        undoBtn.disabled = false;
-    }
-
-    function undo() {
-        if (imageHistory.length > 1) {
-            imageHistory.pop(); // Remove current state
-            const previousState = imageHistory[imageHistory.length - 1];
-            image.src = previousState;
-            if (imageHistory.length === 1) {
-                undoBtn.disabled = true;
-            }
-        }
-    }
-
-    undoBtn.addEventListener('click', undo);
-
+    
     // Handle file input change
     fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -42,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 image.style.display = 'block';
                 placeholder.style.display = 'none';
                 enableButtons();
-                saveImageState();
             };
             reader.readAsDataURL(file);
         }
@@ -97,7 +73,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 image.style.display = 'block';
                 placeholder.style.display = 'none';
                 enableButtons();
-                saveImageState();
             };
             reader.readAsDataURL(file);
         }
@@ -145,13 +120,11 @@ document.addEventListener('DOMContentLoaded', function() {
             cropModal.hide();
             cropper.destroy();
             cropper = null;
-            saveImageState();
         }
     });
 
     // Background removal
     removeBackgroundBtn.addEventListener('click', async function() {
-        saveImageState();
         const formData = new FormData();
         const blob = await fetch(image.src).then(r => r.blob());
         formData.append('image', blob);
@@ -178,7 +151,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Background color selection
     document.querySelectorAll('.color-btn').forEach(btn => {
         btn.addEventListener('click', async function() {
-            saveImageState();
             const color = this.dataset.color;
             const formData = new FormData();
             const blob = await fetch(image.src).then(r => r.blob());
