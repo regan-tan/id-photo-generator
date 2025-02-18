@@ -74,10 +74,15 @@ public class ImageProcessingService {
         Mat binaryMask = new Mat();
         Core.compare(mask, source, binaryMask, Core.CMP_EQ);
 
-        // Refine the binary mask
+        // Refine the binary mask using morphological operations
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
         Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_CLOSE, kernel);
         Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_OPEN, kernel);
+
+        // Use edge detection to further refine the mask
+        Mat edges = new Mat();
+        Imgproc.Canny(binaryMask, edges, 100, 200);
+        Core.bitwise_or(binaryMask, edges, binaryMask);
 
         // Create output image
         Mat result = new Mat();
@@ -91,12 +96,11 @@ public class ImageProcessingService {
         }
 
         // Convert from BGR to RGB
-Imgproc.cvtColor(result, result, Imgproc.COLOR_BGR2RGB);
+        Imgproc.cvtColor(result, result, Imgproc.COLOR_BGR2RGB);
 
-// Convert to RGBA to support transparency
-Mat rgba = new Mat();
-Imgproc.cvtColor(result, rgba, Imgproc.COLOR_RGB2RGBA);
-
+        // Convert to RGBA to support transparency
+        Mat rgba = new Mat();
+        Imgproc.cvtColor(result, rgba, Imgproc.COLOR_RGB2RGBA);
 
         // Set background pixels to transparent
         byte[] pixels = new byte[4];
