@@ -6,6 +6,8 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -44,31 +46,53 @@ public class ImageProcessingService {
         } else {
             image.copyTo(resized);
         }
-
+        List<Rect> rectangles = new ArrayList<>();
         // Create a rectangle for initial segmentation
-        Rect rect = new Rect(
-                resized.cols() / 20, // x
-                resized.rows() / 20, // y
-                resized.cols() * 9 / 10, // width
-                resized.rows() * 9 / 10 // height
+        Rect rect1 = new Rect(
+            resized.cols() *25/ 100,  // x (20% from left)
+            resized.rows() / 20,  // y (5% from top)
+            resized.cols() * 5 / 10,  // width (60% of image)
+            resized.rows() * 19 / 20  // height (spans the top 70% to overlap with rect2)
         );
 
+        Rect rect2 = new Rect(
+            0,  // x (no margin on sides)
+            resized.rows() * 8 / 10,  // y (starts at 60% of height for overlap)
+            resized.cols(),  // width (100% of image)
+            resized.rows() * 2 / 10  // height (covers 30% to the bottom)
+        
+        );
+        rectangles.add(rect1);
+        rectangles.add(rect2);
+
+
+
+
         // Prepare masks and temporary arrays for GrabCut
-        Mat mask = new Mat();
+        Mat mask = Mat.zeros(image.size(), CvType.CV_8UC1);
         Mat bgModel = new Mat();
         Mat fgModel = new Mat();
         Mat source = new Mat(1, 1, CvType.CV_8U, new Scalar(Imgproc.GC_PR_FGD));
 
         // Initialize mask
         mask.create(resized.size(), CvType.CV_8UC1);
-        mask.setTo(new Scalar(Imgproc.GC_BGD));
+        mask.setTo(new Scalar(Imgproc.GC_PR_BGD));
 
-        // Set the rectangular area to probable foreground
-        Mat maskROI = new Mat(mask, rect);
-        maskROI.setTo(new Scalar(Imgproc.GC_PR_FGD));
+
+        for (Rect rect : rectangles) {
+            mask.submat(rect).setTo(new Scalar(Imgproc.GC_PR_FGD));
+        }
+if (image.width() == 0 || image.height() == 0) {
+    throw new IllegalArgumentException("Image dimensions must be non-zero.");
+}
+
+
+
+
+
 
         // Run GrabCut algorithm
-        Imgproc.grabCut(resized, mask, rect, bgModel, fgModel, 5, Imgproc.GC_INIT_WITH_RECT);
+        Imgproc.grabCut(resized, mask, new Rect(), bgModel, fgModel, 5, Imgproc.GC_INIT_WITH_MASK);
 
         // Create binary mask for foreground
         Mat binaryMask = new Mat();
