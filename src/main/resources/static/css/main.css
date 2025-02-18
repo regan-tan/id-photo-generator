@@ -25,6 +25,16 @@
     max-height: 600px;
 }
 
+.img-container {
+    width: 100%;
+    text-align: center;
+}
+
+.img-container img {
+    max-width: 100%;
+    height: auto;
+}
+
 .color-btn {
     width: 30px;
     height: 30px;
@@ -34,10 +44,6 @@
 
 .color-btn.active {
     border: 2px solid #000;
-}
-
-.img-container img {
-    max-width: 100%;
 }
 
 /* Cropper.js customization */
@@ -60,4 +66,36 @@
 .drag-over {
     border-color: #2196F3;
     background-color: rgba(33, 150, 243, 0.1);
+}
+
+/* Modal Styles */
+.modal-dialog {
+    max-width: 90vw; /* Increase the width of the modal */
+    max-height: 90vh; /* Increase the height of the modal */
+    margin: auto; /* Center the modal */
+}
+
+.modal-content {
+    height: 100%; /* Set a height for the modal content */
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-body {
+    padding: 0; /* Remove padding to maximize space */
+    flex-grow: 1; /* Allow the body to take up available space */
+    display: flex;
+    align-items: center; /* Vertically center the image */
+    justify-content: center; /* Horizontally center the image */
+}
+
+.modal-body .img-container {
+    height: 100%;
+    width: 100%;
+}
+
+#cropImage {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Make the image fit inside the container */
 }

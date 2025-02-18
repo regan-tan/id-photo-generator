@@ -7,9 +7,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const removeBackgroundBtn = document.getElementById('removeBackgroundBtn');
     const exportBtn = document.getElementById('exportBtn');
     const placeholder = document.getElementById('placeholder');
-    const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
+    const cropModalElement = document.getElementById('cropModal');
+    const cropModal = new bootstrap.Modal(cropModalElement);
     const cropImage = document.getElementById('cropImage');
     const undoBtn = document.getElementById('undoBtn');
+
 
     function saveImageState() {
         imageHistory.push(image.src);
@@ -29,6 +31,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+
+
 
     undoBtn.addEventListener('click', undo);
 
@@ -57,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle drag and drop
     const imageContainer = document.querySelector('.image-container');
-    
+
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         imageContainer.addEventListener(eventName, preventDefaults, false);
     });
@@ -89,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const dt = e.dataTransfer;
         const file = dt.files[0];
         fileInput.files = dt.files;
-        
+
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -107,31 +111,47 @@ document.addEventListener('DOMContentLoaded', function() {
     cropBtn.addEventListener('click', function() {
         cropImage.src = image.src;
         cropModal.show();
-        
-        if (cropper) {
-            cropper.destroy();
-        }
 
-        cropper = new Cropper(cropImage, {
-            aspectRatio: 35/45,
-            viewMode: 1,
-            dragMode: 'move',
-            autoCropArea: 0.8,
-            restore: false,
-            guides: true,
-            center: true,
-            highlight: false,
-            cropBoxMovable: true,
-            cropBoxResizable: true,
-            toggleDragModeOnDblclick: false
-        });
+        // Wait for the image to load
+        cropImage.onload = function() {
+            if (cropper) {
+                cropper.destroy();
+            }
+
+            // Initialize Cropper.js after the image is loaded
+            cropper = new Cropper(cropImage, {
+                aspectRatio: 35/45,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.8,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+                ready: function() {
+                    // Adjust the crop box size on initialization
+                    cropper.setCropBoxData({
+                        width: Math.min(cropImage.width, cropImage.height * (35/45)),
+                        height: Math.min(cropImage.height, cropImage.width * (45/35))
+                    });
+                }
+            });
+        };
+
+        // Handle cases where the image is already loaded
+        if (cropImage.complete) {
+            cropImage.onload(); // Trigger the onload event manually
+        }
     });
 
     // Handle dimension changes
     document.getElementById('dimensionsSelect').addEventListener('change', function(e) {
         const dimensions = e.target.value.split('x');
         const aspectRatio = parseInt(dimensions[0]) / parseInt(dimensions[1]);
-        
+
         if (cropper) {
             cropper.setAspectRatio(aspectRatio);
         }
@@ -148,6 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
             saveImageState();
         }
     });
+
 
     // Background removal
     removeBackgroundBtn.addEventListener('click', async function() {
@@ -211,5 +232,36 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    });
+
+
+    cropModalElement.addEventListener('shown.bs.modal', function () {
+        if (cropper) {
+            cropper.destroy();
+        }
+        cropImage.onload = function() {
+            cropper = new Cropper(cropImage, {
+                aspectRatio: 35/45,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.8,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+                ready: function() {
+                    cropper.setCropBoxData({
+                        width: Math.min(cropImage.width, cropImage.height * (35/45)),
+                        height: Math.min(cropImage.height, cropImage.width * (45/35))
+                    });
+                }
+            });
+        }
+        if (cropImage.complete) {
+            cropImage.onload();
+        }
     });
 });
