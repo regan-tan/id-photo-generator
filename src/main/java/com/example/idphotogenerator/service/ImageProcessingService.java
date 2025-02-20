@@ -83,6 +83,13 @@ public class ImageProcessingService {
     if (image.width() == 0 || image.height() == 0) {
         throw new IllegalArgumentException("Image dimensions must be non-zero.");
     }
+    Rect mouthRegion = new Rect(
+        resized.cols() * 4 / 10,  // x: 30% from left
+        resized.rows() * 6 / 10,  // y: 60% from top
+        resized.cols() * 2 / 10,  // width: 40% of image
+        resized.rows() * 2 / 10   // height: 20% of image
+    );
+    
 
     // Run GrabCut algorithm
     Imgproc.grabCut(resized, mask, new Rect(), bgModel, fgModel, 5, Imgproc.GC_INIT_WITH_MASK);
@@ -221,5 +228,26 @@ public class ImageProcessingService {
         MatOfByte mob = new MatOfByte();
         Imgcodecs.imencode(".png", mat, mob);
         return mob.toArray();
+    }
+    public static Mat mergeGrabCutMasks(Mat mask1, Mat mask2) {
+        Mat mergedMask = new Mat(mask1.size(), mask1.type());
+
+        for (int i = 0; i < mask1.rows(); i++) {
+            for (int j = 0; j < mask1.cols(); j++) {
+                byte pixel1 = (byte) mask1.get(i, j)[0];
+                byte pixel2 = (byte) mask2.get(i, j)[0];
+
+                if (pixel1 == Imgproc.GC_FGD || pixel2 == Imgproc.GC_FGD) {
+                    mergedMask.put(i, j, Imgproc.GC_FGD);
+                } else if (pixel1 == Imgproc.GC_PR_FGD || pixel2 == Imgproc.GC_PR_FGD) {
+                    mergedMask.put(i, j, Imgproc.GC_PR_FGD);
+                } else if (pixel1 == Imgproc.GC_PR_BGD || pixel2 == Imgproc.GC_PR_BGD) {
+                    mergedMask.put(i, j, Imgproc.GC_PR_BGD);
+                } else {
+                    mergedMask.put(i, j, Imgproc.GC_BGD);
+                }
+            }
+        }
+        return mergedMask;
     }
 }
