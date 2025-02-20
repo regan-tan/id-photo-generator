@@ -15,6 +15,7 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -34,121 +35,132 @@ public class ImageProcessingService {
     }
 
     public byte[] removeBackground(byte[] imageData) throws IOException {
-        // Convert byte array to Mat
-        Mat image = bytesToMat(imageData);
+    // Convert byte array to Mat
+    Mat image = bytesToMat(imageData);
 
-        // Resize image if it's too large (for better performance)
-        Mat resized = new Mat();
-        double scale = 1.0;
-        if (image.width() > 1000 || image.height() > 1000) {
-            scale = 1000.0 / Math.max(image.width(), image.height());
-            Imgproc.resize(image, resized, new Size(), scale, scale, Imgproc.INTER_AREA);
-        } else {
-            image.copyTo(resized);
+    // Resize image if it's too large (for better performance)
+    Mat resized = new Mat();
+    double scale = 1.0;
+    if (image.width() > 1000 || image.height() > 1000) {
+        scale = 1000.0 / Math.max(image.width(), image.height());
+        Imgproc.resize(image, resized, new Size(), scale, scale, Imgproc.INTER_AREA);
+    } else {
+        image.copyTo(resized);
+    }
+
+    List<Rect> rectangles = new ArrayList<>();
+    // Create a rectangle for initial segmentation
+    Rect rect1 = new Rect(
+        resized.cols() * 25 / 100,  // x (20% from left)
+        resized.rows() / 20,  // y (5% from top)
+        resized.cols() * 5 / 10,  // width (60% of image)
+        resized.rows() * 19 / 20  // height (spans the top 70% to overlap with rect2)
+    );
+
+    Rect rect2 = new Rect(
+        0,  // x (no margin on sides)
+        resized.rows() * 8 / 10,  // y (starts at 60% of height for overlap)
+        resized.cols(),  // width (100% of image)
+        resized.rows() * 2 / 10  // height (covers 30% to the bottom)
+    );
+    rectangles.add(rect1);
+    rectangles.add(rect2);
+
+    // Prepare masks and temporary arrays for GrabCut
+    Mat mask = Mat.zeros(image.size(), CvType.CV_8UC1);
+    Mat bgModel = new Mat();
+    Mat fgModel = new Mat();
+    Mat source = new Mat(1, 1, CvType.CV_8U, new Scalar(Imgproc.GC_PR_FGD));
+
+    // Initialize mask
+    mask.create(resized.size(), CvType.CV_8UC1);
+    mask.setTo(new Scalar(Imgproc.GC_PR_BGD));
+
+    for (Rect rect : rectangles) {
+        mask.submat(rect).setTo(new Scalar(Imgproc.GC_PR_FGD));
+    }
+
+    if (image.width() == 0 || image.height() == 0) {
+        throw new IllegalArgumentException("Image dimensions must be non-zero.");
+    }
+
+    // Run GrabCut algorithm
+    Imgproc.grabCut(resized, mask, new Rect(), bgModel, fgModel, 5, Imgproc.GC_INIT_WITH_MASK);
+
+    // Create binary mask for foreground
+    Mat binaryMask = new Mat();
+    Core.compare(mask, source, binaryMask, Core.CMP_EQ);
+
+    // Refine the binary mask using morphological operations
+    Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
+    Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_CLOSE, kernel);
+    Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_OPEN, kernel);
+
+    // Use advanced edge detection for better accuracy
+    Mat edges = new Mat();
+    Imgproc.GaussianBlur(binaryMask, edges, new Size(5, 5), 1.5, 1.5);  // Gaussian blur to smooth edges
+    Imgproc.Canny(edges, edges, 50, 150, 3, false);  // More accurate edge detection
+
+    // Apply contour detection to improve edge separation
+    List<MatOfPoint> contours = new ArrayList<>();
+    Mat hierarchy = new Mat();
+    Imgproc.findContours(edges.clone(), contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+    // Filter contours based on area to avoid noise
+    for (MatOfPoint contour : contours) {
+        if (Imgproc.contourArea(contour) > 500) {  // Ignore small contours that are likely noise
+            Imgproc.drawContours(binaryMask, contours, contours.indexOf(contour), new Scalar(255), -1);
         }
-        List<Rect> rectangles = new ArrayList<>();
-        // Create a rectangle for initial segmentation
-        Rect rect1 = new Rect(
-            resized.cols() *25/ 100,  // x (20% from left)
-            resized.rows() / 20,  // y (5% from top)
-            resized.cols() * 5 / 10,  // width (60% of image)
-            resized.rows() * 19 / 20  // height (spans the top 70% to overlap with rect2)
-        );
+    }
 
-        Rect rect2 = new Rect(
-            0,  // x (no margin on sides)
-            resized.rows() * 8 / 10,  // y (starts at 60% of height for overlap)
-            resized.cols(),  // width (100% of image)
-            resized.rows() * 2 / 10  // height (covers 30% to the bottom)
-        
-        );
-        rectangles.add(rect1);
-        rectangles.add(rect2);
+    // Combine the refined edges with the binary mask
+    Core.bitwise_or(binaryMask, edges, binaryMask);
 
+    // Create output image
+    Mat result = new Mat();
+    resized.copyTo(result, binaryMask);
 
+    // If we resized earlier, resize back to original size
+    if (scale != 1.0) {
+        Mat finalResult = new Mat();
+        Imgproc.resize(result, finalResult, image.size(), 0, 0, Imgproc.INTER_CUBIC);
+        result = finalResult;
+    }
 
+    // Convert from BGR to RGB
+    Imgproc.cvtColor(result, result, Imgproc.COLOR_BGR2RGB);
 
-        // Prepare masks and temporary arrays for GrabCut
-        Mat mask = Mat.zeros(image.size(), CvType.CV_8UC1);
-        Mat bgModel = new Mat();
-        Mat fgModel = new Mat();
-        Mat source = new Mat(1, 1, CvType.CV_8U, new Scalar(Imgproc.GC_PR_FGD));
+    // Convert to RGBA to support transparency
+    Mat rgba = new Mat();
+    Imgproc.cvtColor(result, rgba, Imgproc.COLOR_RGB2RGBA);
 
-        // Initialize mask
-        mask.create(resized.size(), CvType.CV_8UC1);
-        mask.setTo(new Scalar(Imgproc.GC_PR_BGD));
-
-
-        for (Rect rect : rectangles) {
-            mask.submat(rect).setTo(new Scalar(Imgproc.GC_PR_FGD));
-        }
-if (image.width() == 0 || image.height() == 0) {
-    throw new IllegalArgumentException("Image dimensions must be non-zero.");
-}
-
-
-
-
-
-
-        // Run GrabCut algorithm
-        Imgproc.grabCut(resized, mask, new Rect(), bgModel, fgModel, 5, Imgproc.GC_INIT_WITH_MASK);
-
-        // Create binary mask for foreground
-        Mat binaryMask = new Mat();
-        Core.compare(mask, source, binaryMask, Core.CMP_EQ);
-
-        // Refine the binary mask using morphological operations
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
-        Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_CLOSE, kernel);
-        Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_OPEN, kernel);
-
-        // Use edge detection to further refine the mask
-        Mat edges = new Mat();
-        Imgproc.Canny(binaryMask, edges, 100, 200);
-        Core.bitwise_or(binaryMask, edges, binaryMask);
-
-        // Create output image
-        Mat result = new Mat();
-        resized.copyTo(result, binaryMask);
-
-        // If we resized earlier, resize back to original size
-        if (scale != 1.0) {
-            Mat finalResult = new Mat();
-            Imgproc.resize(result, finalResult, image.size(), 0, 0, Imgproc.INTER_CUBIC);
-            result = finalResult;
-        }
-
-        // Convert from BGR to RGB
-        Imgproc.cvtColor(result, result, Imgproc.COLOR_BGR2RGB);
-
-        // Convert to RGBA to support transparency
-        Mat rgba = new Mat();
-        Imgproc.cvtColor(result, rgba, Imgproc.COLOR_RGB2RGBA);
-
-        // Set background pixels to transparent
-        byte[] pixels = new byte[4];
-        for (int i = 0; i < rgba.rows(); i++) {
-            for (int j = 0; j < rgba.cols(); j++) {
-                rgba.get(i, j, pixels);
-                if (pixels[0] == 0 && pixels[1] == 0 && pixels[2] == 0) {
-                    pixels[3] = 0; // Set alpha channel to transparent
-                    rgba.put(i, j, pixels);
-                }
+    // Set background pixels to transparent
+    byte[] pixels = new byte[4];
+    for (int i = 0; i < rgba.rows(); i++) {
+        for (int j = 0; j < rgba.cols(); j++) {
+            rgba.get(i, j, pixels);
+            if (pixels[0] == 0 && pixels[1] == 0 && pixels[2] == 0) {
+                pixels[3] = 0; // Set alpha channel to transparent
+                rgba.put(i, j, pixels);
             }
         }
-
-        // Release resources
-        image.release();
-        resized.release();
-        mask.release();
-        bgModel.release();
-        fgModel.release();
-        binaryMask.release();
-        result.release();
-
-        return matToBytes(rgba);
     }
+
+    // Release resources
+    image.release();
+    resized.release();
+    mask.release();
+    bgModel.release();
+    fgModel.release();
+    binaryMask.release();
+    result.release();
+    edges.release();
+    contours.clear();
+    hierarchy.release();
+
+    return matToBytes(rgba);
+}
+
 
     public byte[] changeBackground(byte[] imageData, String backgroundColor) throws IOException {
         // First remove the background
