@@ -91,41 +91,7 @@ public class ImageProcessingService {
     );
     
 
-    // Run GrabCut algorithm
-    Imgproc.grabCut(resized, mask, new Rect(), bgModel, fgModel, 5, Imgproc.GC_INIT_WITH_MASK);
-
-    // Create binary mask for foreground
-    Mat binaryMask = new Mat();
-    Core.compare(mask, source, binaryMask, Core.CMP_EQ);
-
-    // Refine the binary mask using morphological operations
-    Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
-    Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_CLOSE, kernel);
-    Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_OPEN, kernel);
-
-    // Use advanced edge detection for better accuracy
-    Mat edges = new Mat();
-    Imgproc.GaussianBlur(binaryMask, edges, new Size(5, 5), 1.5, 1.5);  // Gaussian blur to smooth edges
-    Imgproc.Canny(edges, edges, 50, 150, 3, false);  // More accurate edge detection
-
-    // Apply contour detection to improve edge separation
-    List<MatOfPoint> contours = new ArrayList<>();
-    Mat hierarchy = new Mat();
-    Imgproc.findContours(edges.clone(), contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-    // Filter contours based on area to avoid noise
-    for (MatOfPoint contour : contours) {
-        if (Imgproc.contourArea(contour) > 500) {  // Ignore small contours that are likely noise
-            Imgproc.drawContours(binaryMask, contours, contours.indexOf(contour), new Scalar(255), -1);
-        }
-    }
-
-    // Combine the refined edges with the binary mask
-    Core.bitwise_or(binaryMask, edges, binaryMask);
-
-    // Create output image
-    Mat result = new Mat();
-    resized.copyTo(result, binaryMask);
+    Mat result = removal_func(resized, mask, bgModel, fgModel, source);
 
     // If we resized earlier, resize back to original size
     if (scale != 1.0) {
@@ -159,11 +125,9 @@ public class ImageProcessingService {
     mask.release();
     bgModel.release();
     fgModel.release();
-    binaryMask.release();
+    
     result.release();
-    edges.release();
-    contours.clear();
-    hierarchy.release();
+
 
     return matToBytes(rgba);
 }
@@ -249,5 +213,47 @@ public class ImageProcessingService {
             }
         }
         return mergedMask;
+    }
+    private Mat removal_func(Mat resized, Mat mask, Mat bgModel, Mat fgModel, Mat source){
+            // Run GrabCut algorithm
+    Imgproc.grabCut(resized, mask, new Rect(), bgModel, fgModel, 5, Imgproc.GC_INIT_WITH_MASK);
+
+    // Create binary mask for foreground
+    Mat binaryMask = new Mat();
+    Core.compare(mask, source, binaryMask, Core.CMP_EQ);
+
+    // Refine the binary mask using morphological operations
+    Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
+    Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_CLOSE, kernel);
+    Imgproc.morphologyEx(binaryMask, binaryMask, Imgproc.MORPH_OPEN, kernel);
+
+    // Use advanced edge detection for better accuracy
+    Mat edges = new Mat();
+    Imgproc.GaussianBlur(binaryMask, edges, new Size(5, 5), 1.5, 1.5);  // Gaussian blur to smooth edges
+    Imgproc.Canny(edges, edges, 50, 150, 3, false);  // More accurate edge detection
+
+    // Apply contour detection to improve edge separation
+    List<MatOfPoint> contours = new ArrayList<>();
+    Mat hierarchy = new Mat();
+    Imgproc.findContours(edges.clone(), contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+    // Filter contours based on area to avoid noise
+    for (MatOfPoint contour : contours) {
+        if (Imgproc.contourArea(contour) > 500) {  // Ignore small contours that are likely noise
+            Imgproc.drawContours(binaryMask, contours, contours.indexOf(contour), new Scalar(255), -1);
+        }
+    }
+
+    // Combine the refined edges with the binary mask
+    Core.bitwise_or(binaryMask, edges, binaryMask);
+
+    // Create output image
+    Mat result = new Mat();
+    resized.copyTo(result, binaryMask);
+    edges.release();
+    contours.clear();
+    hierarchy.release();
+    binaryMask.release();
+    return result;
     }
 }
