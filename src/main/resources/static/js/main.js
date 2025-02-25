@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
 
                 if (response.ok) {
-                    const result = await response.blob();
+                    const result = await response.blob();   
                     image.src = URL.createObjectURL(result);
                 }
             } catch (error) {
