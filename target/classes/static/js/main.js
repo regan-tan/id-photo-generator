@@ -11,8 +11,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const cropModal = new bootstrap.Modal(cropModalElement);
     const cropImage = document.getElementById('cropImage');
     const undoBtn = document.getElementById('undoBtn');
+    const layout_height = document.getElementById('layout_height');
+    const layout_width = document.getElementById('layout_width');
+    let layout_heightValue=1;
+    let layout_widthValue=1;
 
-    function batchProcessing(){
+    function layoutProcessing(){
         
     }
     function saveImageState() {
@@ -34,7 +38,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    layout_height.addEventListener('change', function() {
+        layout_heightValue = layout_height.value;
 
+    });
+    layout_width.addEventListener('change', function() {
+        layout_widthValue = layout_width.value;
+
+    });
 
     undoBtn.addEventListener('click', undo);
 
@@ -227,14 +238,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Export functionality
     exportBtn.addEventListener('click', async function() {
-        const link = document.createElement('a');
-        const blob = await fetch(image.src).then(r => r.blob());
-        link.href = URL.createObjectURL(blob);
-        link.download = 'id-photo.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    });
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+    
+        // Get the original image
+        const imageObj = new Image();
+        imageObj.src = image.src;
+        
+        // Wait for the image to load
+        imageObj.onload = function() {
+            const imgWidth = imageObj.width;
+            const imgHeight = imageObj.height;
+            console.log(layout_heightValue,layout_widthValue);
+            // Set canvas size for a 4x2 grid (4 columns, 2 rows)
+            canvas.width = imgWidth * layout_widthValue;  // 4 images in a row
+            canvas.height = imgHeight * layout_heightValue; // 2 images in a column
+    
+            // Draw the original image 8 times (4x2 grid)
+            
+            for (let i = 0; i < layout_heightValue; i++) {
+                for (let j = 0; j < layout_widthValue; j++) {
+                    ctx.drawImage(imageObj, j * imgWidth, i * imgHeight, imgWidth, imgHeight);
+                }
+            }
+    
+
+        canvas.toBlob(async function(blob) {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'id-photo.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    };
+});
 
 
     cropModalElement.addEventListener('shown.bs.modal', function () {
