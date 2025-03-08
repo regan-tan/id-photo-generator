@@ -12,7 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const cropImage = document.getElementById('cropImage');
     const undoBtn = document.getElementById('undoBtn');
 
-
+    function batchProcessing(){
+        
+    }
     function saveImageState() {
         imageHistory.push(image.src);
         if (imageHistory.length > 10) {
