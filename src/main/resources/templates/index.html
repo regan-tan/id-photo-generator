@@ -58,24 +58,21 @@
                                     <div class="mb-4">
                                         <input type="file" id="fileInput" class="form-control" accept="image/*">
                                     </div>
+
+                                <!-- Photo Specifications  -->
+                                <div class="feature-group">
+                                    <span>Photo Specifications (photo aspect)</span>
+                                    <select class="form-select mb-2" id="dimensionsSelect">
+                                        <option value="35x45">35mm x 45mm (Passport)</option>
+                                        <option value="25x35">25mm x 35mm (Visa)</option>
+                                        <option value="50x50">50mm x 50mm (Square)</option>
+                                    </select>
+                                </div>
                                     <div class="btn-group-vertical w-100 gap-2" role="group">
                                         <button id="cropBtn" class="btn btn-primary" disabled>Crop Image</button>
                                         <button id="removeBackgroundBtn" class="btn btn-info" disabled>Remove
                                             Background</button>
                                     </div>
-                                </div>
-
-                                <!-- Photo Specifications  -->
-                                <div class="feature-group">
-                                    <h6 class="feature-group-title">Photo Specifications</h6>
-                                    <select class="form-select mb-2" id="dimensionsSelect">
-                                        <option value="35x45">35x45mm (Passport)</option>
-                                        <option value="25x35">25x35mm (Visa)</option>
-                                        <option value="50x50">50x50mm (Square)</option>
-                                    </select>
-   
-                                    
-                                    
                                 </div>
 
                                 <!-- Advanced Features -->
@@ -127,10 +124,10 @@
                                     </div>
                                 </div>
 
-                                <div id="backgroundOptions" style="display: none; margin-top: 10px;">
+                                <!-- <div id="backgroundOptions" style="display: none; margin-top: 10px;">
                                     <p>Select a background color:</p>
                                 </div>
-                                
+                                 -->
 
                                 <!-- Final Actions -->
                                 <div class="feature-group">
