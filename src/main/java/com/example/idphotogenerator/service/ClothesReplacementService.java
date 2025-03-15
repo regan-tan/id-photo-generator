@@ -140,6 +140,5 @@ private Mat overlayImages(Mat userImage, Mat outfitTemplate) {
         mat.put(0, 0, data);
         return mat;
 
-        //what
     }
 }
