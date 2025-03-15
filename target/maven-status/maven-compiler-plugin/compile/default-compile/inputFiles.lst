@@ -1,4 +1,5 @@
-C:\Users\kynan.sia.2023\Documents\OOP\docs\project\id-photo-generator\src\main\java\com\example\idphotogenerator\controller\ImageController.java
-C:\Users\kynan.sia.2023\Documents\OOP\docs\project\id-photo-generator\src\main\java\com\example\idphotogenerator\IdPhotoGeneratorApplication.java
-C:\Users\kynan.sia.2023\Documents\OOP\docs\project\id-photo-generator\src\main\java\com\example\idphotogenerator\service\ImageProcessingService.java
-C:\Users\kynan.sia.2023\Documents\OOP\docs\project\id-photo-generator\src\main\java\com\example\idphotogenerator\service\ClothesReplacementService.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service/ImageProcessingService.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/controller/ImageController.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service/PhotoEnhancementService.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/IdPhotoGeneratorApplication.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service/ClothesReplacementService.java

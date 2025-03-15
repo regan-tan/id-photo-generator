@@ -252,7 +252,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (response.ok) {
         const result = await response.blob();
         image.src = URL.createObjectURL(result);
-        document.getElementById("backgroundOptions").style.display = "block";
+        // Mark image as having transparent background
+        image.dataset.backgroundRemoved = 'true';
       } else {
         alert("Failed to remove background. Please try again.");
       }
@@ -281,7 +282,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (response.ok) {
           const result = await response.blob();
           image.src = URL.createObjectURL(result);
-
+          // Mark image as not having transparent background
+          image.dataset.backgroundRemoved = 'false';
         }
       } catch (error) {
         console.error("Error:", error);
@@ -315,64 +317,64 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // When the confirm button is clicked in the clothes modal
-confirmClothesBtn.addEventListener("click", function () {
-  // Save the current state of the image in the modal
-  saveImageState(); 
+  confirmClothesBtn.addEventListener("click", function () {
+    // Save the current state of the image in the modal
+    saveImageState(); 
 
-  // Check if a template is selected, and apply it
-  if (selectedTemplate) {
-    // Apply the selected clothes template (already handled in the modal)
-    applyClothesTemplate(selectedTemplate);
-  } else {
-    // If no template selected, keep the original image in the modal
-    alert("No template selected. Using the original image.");
-  }
+    // Check if a template is selected, and apply it
+    if (selectedTemplate) {
+      // Apply the selected clothes template (already handled in the modal)
+      applyClothesTemplate(selectedTemplate);
+    } else {
+      // If no template selected, keep the original image in the modal
+      alert("No template selected. Using the original image.");
+    }
 
-  // Update the main image on the screen with the image in the modal
-  image.src = clothesImage.src; 
+    // Update the main image on the screen with the image in the modal
+    image.src = clothesImage.src; 
 
-  // Close the modal after confirmation
-  clothesModal.hide();
-});
+    // Close the modal after confirmation
+    clothesModal.hide();
+  });
 
-function applyClothesTemplate(template) {
-  // Save the image state before applying the template
-  saveImageState();
+  function applyClothesTemplate(template) {
+    // Save the image state before applying the template
+    saveImageState();
 
-  // Create a FormData object to send the user image and selected template name
-  const formData = new FormData();
+    // Create a FormData object to send the user image and selected template name
+    const formData = new FormData();
 
-  // Fetch the user image as a blob
-  fetch(image.src)
-    .then(response => response.blob())
-    .then(blob => {
-      formData.append("image", blob);  // Append the user image to formData
-      formData.append("templateName", template);  // Append the selected template name
-
-      // Send the request to replace clothes
-      fetch("/api/replace-clothes", {
-        method: "POST",
-        body: formData,  // Send the form data with image and template name
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Request failed with status: ${response.status}`);
-        }
-        return response.blob();
-      })
+    // Fetch the user image as a blob
+    fetch(image.src)
+      .then(response => response.blob())
       .then(blob => {
-        const objectURL = URL.createObjectURL(blob);
-        clothesImage.src = objectURL; // Set the result image to the clothes image
+        formData.append("image", blob);  // Append the user image to formData
+        formData.append("templateName", template);  // Append the selected template name
+
+        // Send the request to replace clothes
+        fetch("/api/replace-clothes", {
+          method: "POST",
+          body: formData,  // Send the form data with image and template name
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Request failed with status: ${response.status}`);
+          }
+          return response.blob();
+        })
+        .then(blob => {
+          const objectURL = URL.createObjectURL(blob);
+          clothesImage.src = objectURL; // Set the result image to the clothes image
+        })
+        .catch(error => {
+          console.error("Error applying clothes:", error);
+          alert("An error occurred while applying the clothes template.");
+        });
       })
       .catch(error => {
-        console.error("Error applying clothes:", error);
-        alert("An error occurred while applying the clothes template.");
+        console.error("Error fetching user image:", error);
       });
-    })
-    .catch(error => {
-      console.error("Error fetching user image:", error);
-    });
-}
+  }
 
 
   function getClothesImage(template) {
@@ -441,4 +443,350 @@ function applyClothesTemplate(template) {
     };
   });
 
+  // Variables for image enhancement
+  let originalImageForEnhancement = null;
+  let hasTransparentBackground = false;
+
+  // Clean up multiple event listeners to have just one
+  // Remove all previous event listeners from enhanceBtn (not working in this example, but good practice)
+  const enhanceBtn = document.getElementById('enhanceBtn');
+  const newEnhanceBtn = enhanceBtn.cloneNode(true);
+  enhanceBtn.parentNode.replaceChild(newEnhanceBtn, enhanceBtn);
+
+  // Add single event listener for enhance button
+  document.getElementById('enhanceBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    if (!document.getElementById('image').src || document.getElementById('image').src === window.location.href) {
+      alert('Please upload an image first');
+      return;
+    }
+    
+    // Store a copy of the current image for enhancement
+    const currentImg = document.getElementById('image');
+    originalImageForEnhancement = new Image();
+    originalImageForEnhancement.src = currentImg.src;
+    
+    // Wait for image to load before proceeding
+    originalImageForEnhancement.onload = function() {
+      // Check if the image has a transparent background
+      hasTransparentBackground = checkForTransparentBackground(currentImg);
+      
+      // Set the preview image in the modal
+      const previewImg = document.getElementById('enhancePreviewImg');
+      previewImg.src = currentImg.src;
+      
+      // Reset sliders to default values
+      document.getElementById('brightnessSlider').value = 0;
+      document.getElementById('contrastSlider').value = 0;
+      document.getElementById('smoothnessSlider').value = 30;
+      
+      // Show the modal
+      const enhanceModalElement = document.getElementById('enhanceModal');
+      if (enhanceModalElement) {
+        const enhanceModal = new bootstrap.Modal(enhanceModalElement);
+        enhanceModal.show();
+        console.log("Enhance modal shown");
+      } else {
+        console.error("Enhance modal not found in the DOM");
+      }
+    };
+  });
+
+  // Function to check if image has transparent background
+  function checkForTransparentBackground(img) {
+    // If we've previously removed the background or the image URL contains indicators
+    return img.dataset.backgroundRemoved === 'true' || 
+           img.src.includes('data:image/png') || 
+           img.src.includes('background');
+  }
+
+  // Apply enhancement in real-time as sliders change
+  const brightnessSlider = document.getElementById('brightnessSlider');
+  const contrastSlider = document.getElementById('contrastSlider');
+  const smoothnessSlider = document.getElementById('smoothnessSlider');
+
+  // Add input event listeners to all sliders for real-time updates
+  [brightnessSlider, contrastSlider, smoothnessSlider].forEach(slider => {
+    if (slider) {
+      slider.addEventListener('input', updateEnhancementPreview);
+    }
+  });
+
+  function updateEnhancementPreview() {
+    if (!originalImageForEnhancement) return;
+    
+    const brightness = parseInt(brightnessSlider.value);
+    const contrast = parseInt(contrastSlider.value);
+    const smoothness = parseInt(smoothnessSlider.value);
+    
+    // Show real-time changes in the preview image
+    applyClientSideEnhancements(
+      originalImageForEnhancement, 
+      document.getElementById('enhancePreviewImg'),
+      brightness,
+      contrast,
+      smoothness,
+      hasTransparentBackground
+    );
+  }
+
+  // This is the improved client-side version for real-time feedback with better transparency handling
+  function applyClientSideEnhancements(sourceImg, targetImg, brightness, contrast, smoothness, preserveTransparency) {
+    // Create a canvas with proper alpha channel support and color management
+    const canvas = document.createElement('canvas');
+    canvas.width = sourceImg.naturalWidth;
+    canvas.height = sourceImg.naturalHeight;
+    const ctx = canvas.getContext('2d', { 
+      alpha: true,
+      colorSpace: 'srgb' // Explicitly set color space
+    });
+    
+    // Clear the canvas with white background first (helps with color consistency)
+    if (preserveTransparency) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // Draw the image onto the canvas
+    ctx.drawImage(sourceImg, 0, 0);
+    
+    // Get the image data with alpha channel
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    // Skip processing if no adjustments are needed
+    if (brightness === 0 && contrast === 0 && smoothness === 0) {
+      targetImg.src = sourceImg.src;
+      return;
+    }
+    
+    // Create a copy of the image data for skin smoothing
+    let smoothedData = null;
+    if (smoothness > 0) {
+      // Create a simple blur version for skin smoothing
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d', { alpha: true });
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      
+      // Draw the image and apply a blur filter
+      tempCtx.drawImage(sourceImg, 0, 0);
+      tempCtx.filter = `blur(${smoothness / 20}px)`;
+      tempCtx.drawImage(tempCanvas, 0, 0);
+      
+      // Get the blurred data
+      smoothedData = tempCtx.getImageData(0, 0, canvas.width, canvas.height).data;
+    }
+    
+    // Process every pixel
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i+1];
+      const b = data[i+2];
+      const a = data[i+3]; // Alpha channel
+      
+      // Skip completely transparent pixels
+      if (a === 0) continue;
+      
+      // Skip background pixels if preserving transparency
+      if (preserveTransparency && (r > 240 && g > 240 && b > 240 && a < 255)) {
+        continue;
+      }
+      
+      // Apply contrast adjustment
+      let newR = r;
+      let newG = g;
+      let newB = b;
+      
+      if (contrast !== 0) {
+        const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+        newR = Math.max(0, Math.min(255, Math.round(factor * (newR - 128) + 128)));
+        newG = Math.max(0, Math.min(255, Math.round(factor * (newG - 128) + 128)));
+        newB = Math.max(0, Math.min(255, Math.round(factor * (newB - 128) + 128)));
+      }
+      
+      // Apply brightness adjustment
+      if (brightness !== 0) {
+        newR = Math.max(0, Math.min(255, newR + brightness));
+        newG = Math.max(0, Math.min(255, newG + brightness));
+        newB = Math.max(0, Math.min(255, newB + brightness));
+      }
+      
+      // Apply skin smoothing if enabled
+      if (smoothness > 0) {
+        // Check if this pixel is likely to be skin using YCrCb approximation
+        const isSkin = isSkinTone(r, g, b);
+        
+        if (isSkin) {
+          const smoothFactor = smoothness / 100;
+          
+          // Blend original (adjusted) pixel with the blurred version
+          newR = Math.round(newR * (1 - smoothFactor) + smoothedData[i] * smoothFactor);
+          newG = Math.round(newG * (1 - smoothFactor) + smoothedData[i+1] * smoothFactor);
+          newB = Math.round(newB * (1 - smoothFactor) + smoothedData[i+2] * smoothFactor);
+        }
+      }
+      
+      // Fix for blue tint - slightly boost red channel
+      newR = Math.min(255, Math.round(newR * 1.05));
+      
+      // Update the pixel data (but keep original alpha)
+      data[i] = newR;
+      data[i+1] = newG;
+      data[i+2] = newB;
+      // data[i+3] remains unchanged to preserve transparency
+    }
+    
+    // Put the modified image data back to the canvas
+    ctx.putImageData(imageData, 0, 0);
+    
+    // Set the result to the target image with proper format
+    targetImg.src = canvas.toDataURL(preserveTransparency ? 'image/png' : 'image/jpeg', 0.95);
+}
+
+  // Helper function to detect skin tones using a more accurate YCrCb-approximation method
+  function isSkinTone(r, g, b) {
+    // Convert RGB to approximate YCrCb
+    const y = 0.299 * r + 0.587 * g + 0.114 * b;
+    const cr = r - y + 128;
+    const cb = b - y + 128;
+    
+    // Standard skin tone range in YCrCb color space
+    const skinRegion = (cr >= 135 && cr <= 180 && cb >= 85 && cb <= 135);
+    
+    // Additional check for certain skin tones
+    const skinRegionRGB = (r > 95 && g > 40 && b > 20 && 
+                          r > g && r > b && 
+                          Math.abs(r - g) > 15);
+    
+    return skinRegion || skinRegionRGB;
+  }
+
+  // Apply enhancement button functionality - this function uses server-side processing for final image
+  // Apply enhancement button functionality - updated to use client-side processing for final image
+document.getElementById('applyEnhanceBtn').addEventListener('click', async function() {
+  if (!originalImageForEnhancement) return;
+  
+  const brightness = parseInt(brightnessSlider.value);
+  const contrast = parseInt(contrastSlider.value);
+  const smoothness = parseInt(smoothnessSlider.value);
+  
+  try {
+    // Save the current state before making changes
+    saveImageState();
+    
+    // Show loading indicator
+    const mainImage = document.getElementById('image');
+    mainImage.style.opacity = "0.6";
+    
+    // Instead of sending to server, apply the same client-side enhancements for the final image
+    const tempImg = new Image();
+    tempImg.onload = function() {
+      // Create a canvas for the final output
+      const canvas = document.createElement('canvas');
+      canvas.width = tempImg.naturalWidth;
+      canvas.height = tempImg.naturalHeight;
+      const ctx = canvas.getContext('2d', { alpha: true });
+      
+      // Use the same enhancement function that works for the preview
+      applyClientSideEnhancements(
+        originalImageForEnhancement,
+        tempImg,
+        brightness,
+        contrast,
+        smoothness,
+        hasTransparentBackground
+      );
+      
+      // Wait for the temp image to update
+      tempImg.onload = function() {
+        // Apply the result to the main image
+        mainImage.src = tempImg.src;
+        mainImage.style.opacity = "1";
+        
+        // Close the modal properly
+        const enhanceModal = bootstrap.Modal.getInstance(document.getElementById('enhanceModal'));
+        if (enhanceModal) {
+          enhanceModal.hide();
+        }
+        
+        // Clean up modal backdrops
+        setTimeout(() => {
+          document.body.classList.remove('modal-open');
+          const backdrops = document.querySelectorAll('.modal-backdrop');
+          backdrops.forEach(el => el.remove());
+        }, 200);
+      };
+    };
+    
+    tempImg.src = originalImageForEnhancement.src;
+    
+  } catch (error) {
+    console.error("Error enhancing photo:", error);
+    alert("An error occurred while enhancing the photo.");
+    document.getElementById('image').style.opacity = "1";
+  }
+});
+
+  // Make sure the modal properly cleans up when hidden
+  const enhanceModalElement = document.getElementById('enhanceModal');
+  if (enhanceModalElement) {
+    enhanceModalElement.addEventListener('hidden.bs.modal', function () {
+      // Reset everything when modal is closed
+      originalImageForEnhancement = null;
+      const previewImg = document.getElementById('enhancePreviewImg');
+      if (previewImg) {
+        previewImg.src = '';
+      }
+    });
+  }
+
+  // Cancel button handler
+  const cancelBtn = document.querySelector('#enhanceModal .btn-secondary');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', function() {
+      const enhanceModalEl = document.getElementById('enhanceModal');
+      const enhanceModalInstance = bootstrap.Modal.getInstance(enhanceModalEl);
+      
+      if (enhanceModalInstance) {
+        // Clear any modified preview before closing
+        const previewImg = document.getElementById('enhancePreviewImg');
+        if (originalImageForEnhancement && previewImg) {
+          previewImg.src = originalImageForEnhancement.src;
+        }
+        
+        // Close the modal
+        enhanceModalInstance.hide();
+        
+        // Additional cleanup
+        setTimeout(() => {
+          document.body.classList.remove('modal-open');
+          document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        }, 200);
+      }
+    });
+  }
+
+  // Also ensure modal close button (×) works
+  const closeBtn = document.querySelector('#enhanceModal .btn-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function() {
+      // Ensure modal is properly closed
+      const enhanceModalEl = document.getElementById('enhanceModal');
+      const enhanceModalInstance = bootstrap.Modal.getInstance(enhanceModalEl);
+      
+      if (enhanceModalInstance) {
+        enhanceModalInstance.hide();
+        
+        // Additional cleanup for proper modal removal
+        setTimeout(() => {
+          document.body.classList.remove('modal-open');
+          document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        }, 150);
+      }
+    });
+  }
 });
