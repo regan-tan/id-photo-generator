@@ -1,10 +1,5 @@
 package com.example.idphotogenerator.service;
 
-import org.opencv.core.*;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.springframework.stereotype.Service;
-
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -15,6 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+import org.springframework.stereotype.Service;
 
 @Service
 public class ClothesReplacementService {
@@ -49,54 +54,52 @@ public class ClothesReplacementService {
         return resizedOutfit;
     }
 
-private Mat overlayImages(Mat userImage, Mat outfitTemplate) {
-    // Ensure the outfit template matches the user's image size
-    Mat resizedOutfit = new Mat();
-    Imgproc.resize(outfitTemplate, resizedOutfit, new Size(userImage.width(), userImage.height()));
+    private Mat overlayImages(Mat userImage, Mat outfitTemplate) {
+        // Ensure the outfit template matches the user's image size
+        Mat resizedOutfit = new Mat();
+        Imgproc.resize(outfitTemplate, resizedOutfit, new Size(userImage.width(), userImage.height()));
 
-    // Split channels
-    List<Mat> outfitChannels = new ArrayList<>();
-    List<Mat> userChannels = new ArrayList<>();
-    
-    Core.split(resizedOutfit, outfitChannels);
-    Core.split(userImage, userChannels);
+        // Split channels
+        List<Mat> outfitChannels = new ArrayList<>();
+        List<Mat> userChannels = new ArrayList<>();
 
-    if (outfitChannels.size() == 4) { // Ensure template has an alpha channel
-        Mat alpha = outfitChannels.get(3); // Extract alpha channel
+        Core.split(resizedOutfit, outfitChannels);
+        Core.split(userImage, userChannels);
 
-        // Normalize alpha channel to range [0,1]
-        Mat alphaNormalized = new Mat();
-        alpha.convertTo(alphaNormalized, CvType.CV_32F, 1.0 / 255.0);
+        if (outfitChannels.size() == 4) { // Ensure template has an alpha channel
+            Mat alpha = outfitChannels.get(3); // Extract alpha channel
 
-        // Create an inverse alpha mask (1 - alpha)
-        Mat inverseAlpha = new Mat(alphaNormalized.size(), alphaNormalized.type(), Scalar.all(1.0));
-        Core.subtract(inverseAlpha, alphaNormalized, inverseAlpha); // Corrected subtraction
+            // Normalize alpha channel to range [0,1]
+            Mat alphaNormalized = new Mat();
+            alpha.convertTo(alphaNormalized, CvType.CV_32F, 1.0 / 255.0);
 
-        // Convert user image to float for blending
-        for (int i = 0; i < 3; i++) {
-            Mat blendedChannel = new Mat();
-            Mat outfitFloat = new Mat();
-            Mat userFloat = new Mat();
+            // Create an inverse alpha mask (1 - alpha)
+            Mat inverseAlpha = new Mat(alphaNormalized.size(), alphaNormalized.type(), Scalar.all(1.0));
+            Core.subtract(inverseAlpha, alphaNormalized, inverseAlpha); // Corrected subtraction
 
-            outfitChannels.get(i).convertTo(outfitFloat, CvType.CV_32F);
-            userChannels.get(i).convertTo(userFloat, CvType.CV_32F);
+            // Convert user image to float for blending
+            for (int i = 0; i < 3; i++) {
+                Mat blendedChannel = new Mat();
+                Mat outfitFloat = new Mat();
+                Mat userFloat = new Mat();
 
-            // Perform blending: new_pixel = outfit * alpha + user * (1 - alpha)
-            Core.multiply(outfitFloat, alphaNormalized, outfitFloat);
-            Core.multiply(userFloat, inverseAlpha, userFloat);
-            Core.add(outfitFloat, userFloat, blendedChannel);
+                outfitChannels.get(i).convertTo(outfitFloat, CvType.CV_32F);
+                userChannels.get(i).convertTo(userFloat, CvType.CV_32F);
 
-            blendedChannel.convertTo(userChannels.get(i), CvType.CV_8U);
+                // Perform blending: new_pixel = outfit * alpha + user * (1 - alpha)
+                Core.multiply(outfitFloat, alphaNormalized, outfitFloat);
+                Core.multiply(userFloat, inverseAlpha, userFloat);
+                Core.add(outfitFloat, userFloat, blendedChannel);
+
+                blendedChannel.convertTo(userChannels.get(i), CvType.CV_8U);
+            }
+
+            // Merge the blended channels back into a single image
+            Core.merge(userChannels, userImage);
         }
 
-        // Merge the blended channels back into a single image
-        Core.merge(userChannels, userImage);
+        return userImage;
     }
-
-    return userImage;
-}
-
-
 
     // Convert byte array to OpenCV Mat
     private Mat bytesToMat(byte[] imageData) throws IOException {
@@ -130,14 +133,14 @@ private Mat overlayImages(Mat userImage, Mat outfitTemplate) {
 
         for (int i = 0; i < pixels.length; i++) {
             int pixel = pixels[i];
-            data[i * 4] = (byte) ((pixel >> 16) & 0xFF); // Red
+            // Correct BGR ordering for OpenCV
+            data[i * 4] = (byte) (pixel & 0xFF);           // Blue
             data[i * 4 + 1] = (byte) ((pixel >> 8) & 0xFF); // Green
-            data[i * 4 + 2] = (byte) (pixel & 0xFF); // Blue
+            data[i * 4 + 2] = (byte) ((pixel >> 16) & 0xFF); // Red
             data[i * 4 + 3] = (byte) ((pixel >> 24) & 0xFF); // Alpha
         }
 
         mat.put(0, 0, data);
         return mat;
-
     }
 }
