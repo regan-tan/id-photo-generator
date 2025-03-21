@@ -3,3 +3,4 @@ com/example/idphotogenerator/service/ClothesReplacementService.class
 com/example/idphotogenerator/service/PhotoEnhancementService.class
 com/example/idphotogenerator/service/ImageProcessingService.class
 com/example/idphotogenerator/controller/ImageController.class
+com/example/idphotogenerator/controller/ImageController$1.class

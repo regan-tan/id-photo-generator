@@ -580,35 +580,52 @@ removeBackgroundBtn.addEventListener("click", async function () {
       previewModalInstance.hide();
       
       // Process in background
-      processingPromise = (async () => {
-          const formData = new FormData();
-          const blob = await fetch(image.src).then((r) => r.blob());
-          formData.append("image", blob);
-          formData.append("rectangles", JSON.stringify(rectangleInfo));
-          
-          try {
-              const response = await fetch("/api/remove-background", {
-                  method: "POST",
-                  body: formData,
-              });
-              
-              if (response.ok) {
-                  const result = await response.blob();
-                  image.src = URL.createObjectURL(result);
-                  // Mark image as having transparent background
-                  image.dataset.backgroundRemoved = 'true';
-              } else {
-                  alert("Failed to remove background. Please try again.");
-              }
-          } catch (error) {
-              console.error("Error:", error);
-              alert("An error occurred while processing the image.");
-          } finally {
-              // Remove loading overlay
-              imageContainer.removeChild(loadingOverlay);
-              isProcessing = false;
-          }
-      })();
+// Process in background
+processingPromise = (async () => {
+  const formData = new FormData();
+  const blob = await fetch(image.src).then((r) => r.blob());
+  formData.append("image", blob);
+  
+  // Format rectangles as required by the backend
+  const rectanglesData = {};
+  rectangleInfo.forEach((rect, index) => {
+      // Convert each rectangle to an array of 4 doubles: [x, y, width, height]
+      rectanglesData[`rectangle${index+1}`] = [
+          rect.x, 
+          rect.y, 
+          rect.width, 
+          rect.height
+      ];
+  });
+  
+  // Add rectangles data as a JSON string parameter
+  formData.append("rectangles", JSON.stringify(rectanglesData));
+  
+  try {
+      // Use fetch with appropriate headers for multipart request with JSON body
+      const response = await fetch("/api/remove-background", {
+        method: "POST",
+        body: formData
+    });
+      
+      if (response.ok) {
+          const result = await response.blob();
+          image.src = URL.createObjectURL(result);
+          // Mark image as having transparent background
+          image.dataset.backgroundRemoved = 'true';
+      } else {
+          alert("Failed to remove background. Please try again.");
+      }
+  } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred while processing the image.");
+  } finally {
+      // Remove loading overlay
+      imageContainer.removeChild(loadingOverlay);
+      isProcessing = false;
+  }
+})();
+
   });
   
   // Handle modal close event - ensure processing continues

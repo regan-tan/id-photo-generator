@@ -2,6 +2,7 @@ package com.example.idphotogenerator.controller;
 
 import com.example.idphotogenerator.service.ImageProcessingService;
 import com.example.idphotogenerator.service.PhotoEnhancementService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.idphotogenerator.service.ClothesReplacementService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,11 +12,24 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
 import java.nio.file.Path;
+
+
+
+
+
+
+
 
 @Controller
 public class ImageController {
@@ -40,22 +54,31 @@ public class ImageController {
         return "index";
     }
 
-    @PostMapping(value = "/api/remove-background", produces = MediaType.IMAGE_PNG_VALUE)
-    @ResponseBody
-    public ResponseEntity<byte[]> removeBackground(@RequestParam("image") MultipartFile image) {
-        try {
-            if (image.isEmpty()) {
-                return ResponseEntity.badRequest().build();
-            }
-            byte[] processedImage = imageProcessingService.removeBackground(image.getBytes());
-            return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_PNG)
-                    .body(processedImage);
-        } catch (IOException e) {
-            log.error("Error processing image for background removal", e);
-            return ResponseEntity.internalServerError().build();
+@PostMapping(value = "/api/remove-background", produces = MediaType.IMAGE_PNG_VALUE)
+@ResponseBody
+public ResponseEntity<byte[]> removeBackground(
+        @RequestParam("image") MultipartFile image,
+        @RequestParam("rectangles") String rectanglesJson) {
+    try {
+        if (image.isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
+        
+        // Parse the JSON string to a Map
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, List<Double>> rectangles = mapper.readValue(rectanglesJson, 
+                new TypeReference<Map<String, List<Double>>>() {});
+        
+        byte[] processedImage = imageProcessingService.removeBackground(image.getBytes(), rectangles);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(processedImage);
+    } catch (IOException e) {
+        log.error("Error processing image for background removal", e);
+        return ResponseEntity.internalServerError().build();
     }
+}
+
 
     @PostMapping(value = "/api/change-background", produces = MediaType.IMAGE_PNG_VALUE)
     @ResponseBody

@@ -7,6 +7,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.*;
 
 import javax.imageio.ImageIO;
 
@@ -33,7 +35,7 @@ public class ImageProcessingService {
         OpenCV.loadLocally();
     }
 
-    public byte[] removeBackground(byte[] imageData) throws IOException {
+    public byte[] removeBackground(byte[] imageData,Map<String, List<Double>> rectangles_dim) throws IOException {
         // Convert byte array to Mat
         Mat image = bytesToMat(imageData);
 
@@ -49,21 +51,25 @@ public class ImageProcessingService {
 
         List<Rect> rectangles = new ArrayList<>();
         // Create a rectangle for initial segmentation
-        Rect rect1 = new Rect(
-                resized.cols() * 25 / 100, // x (20% from left)
-                resized.rows() / 20, // y (5% from top)
-                resized.cols() * 5 / 10, // width (60% of image)
-                resized.rows() * 19 / 20 // height (spans the top 70% to overlap with rect2)
-        );
+        Set<Entry<String, List<Double>>> entrySet = rectangles_dim.entrySet();
+        for(Entry<String, List<Double>> entry: entrySet){
+            Rect rect1 = new Rect(
+                (int) (resized.cols() *  (entry.getValue().get(0)/ image.width())), // x (20% from left)
+                (int)   (resized.rows() * (entry.getValue().get(1)/ image.height())), // y (5% from top)
+                (int)    (resized.cols() * (entry.getValue().get(2)/ image.width())), // width (50% of image)
+                (int)    (resized.rows() * (entry.getValue().get(3)/ image.height())) // height (spans the top 70% to overlap with rect2)
+            );
+            rectangles.add(rect1);
 
-        Rect rect2 = new Rect(
-                0, // x (no margin on sides)
-                resized.rows() * 8 / 10, // y (starts at 60% of height for overlap)
-                resized.cols(), // width (100% of image)
-                resized.rows() * 2 / 10 // height (covers 30% to the bottom)
-        );
-        rectangles.add(rect1);
-        rectangles.add(rect2);
+        }
+
+        System.out.println(rectangles_dim.get("rectangle1").get(0)/ image.width());
+        System.out.println(rectangles_dim.get("rectangle1").get(1)/ image.height());
+        System.out.println(rectangles_dim.get("rectangle1").get(2)/ image.width());
+        System.out.println(rectangles_dim.get("rectangle1").get(3)/ image.height());
+
+        
+
 
         // Prepare masks and temporary arrays for GrabCut
         Mat mask = Mat.zeros(image.size(), CvType.CV_8UC1);
@@ -130,7 +136,7 @@ public class ImageProcessingService {
 
     public byte[] changeBackground(byte[] imageData, String backgroundColor) throws IOException {
         // First remove the background
-        byte[] transparentImage = removeBackground(imageData);
+        byte[] transparentImage = imageData;
 
         // Convert the color string to RGB values
         Color color = Color.decode(backgroundColor);
