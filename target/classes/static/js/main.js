@@ -237,31 +237,354 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Background removal
-  removeBackgroundBtn.addEventListener("click", async function () {
-    saveImageState();
-    const formData = new FormData();
-    const blob = await fetch(image.src).then((r) => r.blob());
-    formData.append("image", blob);
-
-    try {
-      const response = await fetch("/api/remove-background", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        const result = await response.blob();
-        image.src = URL.createObjectURL(result);
-        // Mark image as having transparent background
-        image.dataset.backgroundRemoved = 'true';
-      } else {
-        alert("Failed to remove background. Please try again.");
+// Background removal with rectangle preview
+removeBackgroundBtn.addEventListener("click", async function () {
+  // Create a preview canvas for rectangle drawing
+  const previewModal = document.createElement('div');
+  previewModal.className = 'modal fade';
+  previewModal.id = 'rectanglePreviewModal';
+  previewModal.innerHTML = `
+      <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title">Rectangle Preview</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                  <canvas id="previewCanvas" style="border:1px solid #000;"></canvas>
+                  <div class="mt-3">
+                      <button id="addRectBtn" class="btn btn-primary">Add Rectangle</button>
+                      <button id="removeRectBtn" class="btn btn-danger">Remove Selected</button>
+                  </div>
+                  <div class="mt-3">
+                      <p>Rectangles: <span id="rectangleInfo"></span></p>
+                  </div>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary" id="applyBackgroundRemoval">Apply & Remove Background</button>
+              </div>
+          </div>
+      </div>
+  `;
+  document.body.appendChild(previewModal);
+  
+  const previewModalInstance = new bootstrap.Modal(previewModal);
+  previewModalInstance.show();
+  
+  // Setup canvas
+  const previewCanvas = document.getElementById('previewCanvas');
+  const pctx = previewCanvas.getContext('2d');
+  
+  // Load the current image onto the preview canvas
+  const previewImg = new Image();
+  previewImg.onload = function() {
+      // Set canvas size to match image
+      previewCanvas.width = previewImg.width;
+      previewCanvas.height = previewImg.height;
+      
+      // Draw image on canvas
+      pctx.drawImage(previewImg, 0, 0);
+      
+      // Initialize rectangle management
+      initRectangleManagement(previewCanvas, pctx, previewImg);
+  };
+  previewImg.src = image.src;
+  
+  // Apply background removal with rectangles
+  document.getElementById('applyBackgroundRemoval').addEventListener('click', async function() {
+      saveImageState();
+      
+      // Get rectangle information
+      const rectangleInfo = rectangles.map(rect => ({
+          x: rect.x,
+          y: rect.y,
+          width: rect.width,
+          height: rect.height
+      }));
+      
+      const formData = new FormData();
+      const blob = await fetch(image.src).then((r) => r.blob());
+      formData.append("image", blob);
+      formData.append("rectangles", JSON.stringify(rectangleInfo));
+      
+      try {
+          const response = await fetch("/api/remove-background", {
+              method: "POST",
+              body: formData,
+          });
+          
+          if (response.ok) {
+              const result = await response.blob();
+              image.src = URL.createObjectURL(result);
+              // Mark image as having transparent background
+              image.dataset.backgroundRemoved = 'true';
+              
+              // Close the modal
+              previewModalInstance.hide();
+              
+              // Remove the modal from DOM after hiding
+              previewModal.addEventListener('hidden.bs.modal', function() {
+                  document.body.removeChild(previewModal);
+              });
+          } else {
+              alert("Failed to remove background. Please try again.");
+          }
+      } catch (error) {
+          console.error("Error:", error);
+          alert("An error occurred while processing the image.");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred while processing the image.");
-    }
   });
+});
+
+// Function to initialize rectangle management
+function initRectangleManagement(canvas, ctx, img) {
+  // Rectangle storage
+  window.rectangles = [];
+  let selectedRectIndex = -1;
+  let isResizing = false;
+  let resizeHandle = '';
+  let isDragging = false;
+  let startX, startY;
+  
+  // Function to draw all rectangles
+  function drawRectangles() {
+      // Clear canvas and redraw image
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      
+      // Draw all rectangles
+      rectangles.forEach((rect, index) => {
+          ctx.beginPath();
+          ctx.rect(rect.x, rect.y, rect.width, rect.height);
+          
+          if (index === selectedRectIndex) {
+              ctx.strokeStyle = 'red';
+              ctx.lineWidth = 2;
+              
+              // Draw resize handles for selected rectangle
+              const handleSize = 8;
+              
+              // Top-left
+              ctx.fillStyle = 'white';
+              ctx.fillRect(rect.x - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
+              ctx.strokeRect(rect.x - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
+              
+              // Top-right
+              ctx.fillRect(rect.x + rect.width - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
+              ctx.strokeRect(rect.x + rect.width - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
+              
+              // Bottom-left
+              ctx.fillRect(rect.x - handleSize/2, rect.y + rect.height - handleSize/2, handleSize, handleSize);
+              ctx.strokeRect(rect.x - handleSize/2, rect.y + rect.height - handleSize/2, handleSize, handleSize);
+              
+              // Bottom-right
+              ctx.fillRect(rect.x + rect.width - handleSize/2, rect.y + rect.height - handleSize/2, handleSize, handleSize);
+              ctx.strokeRect(rect.x + rect.width - handleSize/2, rect.y + rect.height - handleSize/2, handleSize, handleSize);
+          } else {
+              ctx.strokeStyle = 'blue';
+              ctx.lineWidth = 1;
+          }
+          
+          ctx.stroke();
+      });
+      
+      // Update rectangle info display
+      updateRectangleInfo();
+  }
+  
+  // Function to update rectangle information display
+  function updateRectangleInfo() {
+      const infoElement = document.getElementById('rectangleInfo');
+      if (infoElement) {
+          infoElement.innerHTML = rectangles.map((rect, index) => 
+              `#${index+1}: (${Math.round(rect.x)},${Math.round(rect.y)}) ${Math.round(rect.width)}x${Math.round(rect.height)}px`
+          ).join(' | ');
+      }
+  }
+  
+  // Function to check if mouse is over a resize handle
+  function getResizeHandle(x, y) {
+      if (selectedRectIndex === -1) return '';
+      
+      const rect = rectangles[selectedRectIndex];
+      const handleSize = 8;
+      
+      // Check each handle
+      if (Math.abs(x - rect.x) <= handleSize && Math.abs(y - rect.y) <= handleSize) {
+          return 'tl'; // top-left
+      } else if (Math.abs(x - (rect.x + rect.width)) <= handleSize && Math.abs(y - rect.y) <= handleSize) {
+          return 'tr'; // top-right
+      } else if (Math.abs(x - rect.x) <= handleSize && Math.abs(y - (rect.y + rect.height)) <= handleSize) {
+          return 'bl'; // bottom-left
+      } else if (Math.abs(x - (rect.x + rect.width)) <= handleSize && Math.abs(y - (rect.y + rect.height)) <= handleSize) {
+          return 'br'; // bottom-right
+      }
+      
+      return '';
+  }
+  
+  // Function to check if point is inside a rectangle
+  function isPointInRect(x, y, rect) {
+      return x >= rect.x && x <= rect.x + rect.width && 
+             y >= rect.y && y <= rect.y + rect.height;
+  }
+  
+  // Mouse event handlers
+  canvas.addEventListener('mousedown', function(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Check for resize handle first
+      const handle = getResizeHandle(x, y);
+      if (handle) {
+          isResizing = true;
+          resizeHandle = handle;
+          startX = x;
+          startY = y;
+          return;
+      }
+      
+      // Check if clicking on an existing rectangle
+      let found = false;
+      for (let i = rectangles.length - 1; i >= 0; i--) {
+          if (isPointInRect(x, y, rectangles[i])) {
+              selectedRectIndex = i;
+              isDragging = true;
+              startX = x;
+              startY = y;
+              found = true;
+              break;
+          }
+      }
+      
+      if (!found) {
+          selectedRectIndex = -1;
+      }
+      
+      drawRectangles();
+  });
+  
+  canvas.addEventListener('mousemove', function(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Update cursor based on position
+      if (!isResizing && !isDragging) {
+          const handle = getResizeHandle(x, y);
+          if (handle === 'tl' || handle === 'br') {
+              canvas.style.cursor = 'nwse-resize';
+          } else if (handle === 'tr' || handle === 'bl') {
+              canvas.style.cursor = 'nesw-resize';
+          } else {
+              let onRect = false;
+              for (let i = 0; i < rectangles.length; i++) {
+                  if (isPointInRect(x, y, rectangles[i])) {
+                      canvas.style.cursor = 'move';
+                      onRect = true;
+                      break;
+                  }
+              }
+              if (!onRect) {
+                  canvas.style.cursor = 'default';
+              }
+          }
+      }
+      
+      // Handle resizing
+      if (isResizing && selectedRectIndex !== -1) {
+          const rect = rectangles[selectedRectIndex];
+          const dx = x - startX;
+          const dy = y - startY;
+          
+          switch (resizeHandle) {
+              case 'tl': // top-left
+                  rect.x += dx;
+                  rect.y += dy;
+                  rect.width -= dx;
+                  rect.height -= dy;
+                  break;
+              case 'tr': // top-right
+                  rect.y += dy;
+                  rect.width += dx;
+                  rect.height -= dy;
+                  break;
+              case 'bl': // bottom-left
+                  rect.x += dx;
+                  rect.width -= dx;
+                  rect.height += dy;
+                  break;
+              case 'br': // bottom-right
+                  rect.width += dx;
+                  rect.height += dy;
+                  break;
+          }
+          
+          // Ensure minimum size
+          if (rect.width < 10) rect.width = 10;
+          if (rect.height < 10) rect.height = 10;
+          
+          startX = x;
+          startY = y;
+          drawRectangles();
+      }
+      
+      // Handle dragging
+      if (isDragging && selectedRectIndex !== -1 && !isResizing) {
+          const rect = rectangles[selectedRectIndex];
+          rect.x += x - startX;
+          rect.y += y - startY;
+          
+          // Keep rectangle within canvas bounds
+          if (rect.x < 0) rect.x = 0;
+          if (rect.y < 0) rect.y = 0;
+          if (rect.x + rect.width > canvas.width) rect.x = canvas.width - rect.width;
+          if (rect.y + rect.height > canvas.height) rect.y = canvas.height - rect.height;
+          
+          startX = x;
+          startY = y;
+          drawRectangles();
+      }
+  });
+  
+  canvas.addEventListener('mouseup', function() {
+      isResizing = false;
+      isDragging = false;
+      resizeHandle = '';
+  });
+  
+  // Add rectangle button
+  document.getElementById('addRectBtn').addEventListener('click', function() {
+      // Create a new rectangle in the center of the canvas
+      const newRect = {
+          x: canvas.width / 4,
+          y: canvas.height / 4,
+          width: canvas.width / 2,
+          height: canvas.height / 2
+      };
+      
+      rectangles.push(newRect);
+      selectedRectIndex = rectangles.length - 1;
+      drawRectangles();
+  });
+  
+  // Remove rectangle button
+  document.getElementById('removeRectBtn').addEventListener('click', function() {
+      if (selectedRectIndex !== -1) {
+          rectangles.splice(selectedRectIndex, 1);
+          selectedRectIndex = -1;
+          drawRectangles();
+      } else {
+          alert('Please select a rectangle to remove');
+      }
+  });
+  
+  // Initial draw
+  drawRectangles();
+}
+
 
   // Background color selection
   document.querySelectorAll(".color-btn").forEach((btn) => {
