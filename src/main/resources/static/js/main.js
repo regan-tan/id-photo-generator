@@ -1167,4 +1167,44 @@ document.getElementById('applyEnhanceBtn').addEventListener('click', async funct
       }
     });
   }
+
+  // Compliance Checker logic
+const checkBtn = document.getElementById("checkBtn");
+const complianceResult = document.getElementById("complianceResult");
+
+checkBtn.addEventListener("click", async () => {
+  if (!image.src || image.src === window.location.href) {
+    alert("Please upload an image first.");
+    return;
+  }
+
+  try {
+    complianceResult.textContent = "Checking compliance...";
+    complianceResult.classList.remove("text-danger", "text-success");
+
+    const blob = await fetch(image.src).then(res => res.blob());
+    const formData = new FormData();
+    formData.append("file", blob, "image.png");
+
+    const response = await fetch("/api/check-compliance", {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (result.status === "Pass") {
+      complianceResult.textContent = `✅ ${result.details || "Photo passed compliance check."}`;
+      complianceResult.classList.add("text-success");
+    } else {
+      complianceResult.textContent = `❌ ${result.reason || "Photo failed compliance check."}`;
+      complianceResult.classList.add("text-danger");
+    }
+  } catch (error) {
+    console.error("Compliance check failed:", error);
+    complianceResult.textContent = "❌ Error checking compliance.";
+    complianceResult.classList.add("text-danger");
+  }
+});
+
 });

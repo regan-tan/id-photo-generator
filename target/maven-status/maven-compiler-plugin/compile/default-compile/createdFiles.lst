@@ -1,3 +1,4 @@
+com\example\idphotogenerator\service\ComplianceCheckerService.class
 com\example\idphotogenerator\service\PhotoEnhancementService.class
 com\example\idphotogenerator\service\ImageProcessingService.class
 com\example\idphotogenerator\controller\ImageController.class

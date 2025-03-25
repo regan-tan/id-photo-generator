@@ -12,10 +12,14 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+
 import com.fasterxml.jackson.core.type.TypeReference;
+
+import com.example.idphotogenerator.service.ComplianceCheckerService;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
+
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,12 +27,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.nio.file.Path;
-
-
-
-
-
-
 
 
 @Controller
@@ -165,5 +163,15 @@ public ResponseEntity<byte[]> removeBackground(
             return ResponseEntity.internalServerError().build();
         }
     }
-
+    @Autowired
+    private ComplianceCheckerService complianceCheckerService;
+    
+    @PostMapping("/api/check-compliance")
+    @ResponseBody
+    public Map<String, Object> checkCompliance(@RequestParam("file") MultipartFile file) throws IOException {
+    Mat img = Imgcodecs.imdecode(new MatOfByte(file.getBytes()), Imgcodecs.IMREAD_COLOR);
+    return complianceCheckerService.checkCompliance(img);
 }
+}
+
+
