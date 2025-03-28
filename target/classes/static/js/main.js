@@ -173,13 +173,12 @@ document.addEventListener("DOMContentLoaded", function () {
         cropBoxMovable: true,
         cropBoxResizable: true,
         toggleDragModeOnDblclick: false,
-    
       });
     };
 
     // Handle cases where the image is already loaded
     if (cropImage.complete) {
-        setTimeout(() => cropImage.onload(), 200);
+      setTimeout(() => cropImage.onload(), 200);
     }
   });
 
@@ -223,7 +222,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-
   // Save cropped image
   document.getElementById("cropSaveBtn").addEventListener("click", function () {
     if (cropper) {
@@ -237,409 +235,504 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Background removal
-// Function to initialize rectangle management - moved to global scope
-function initRectangleManagement(canvas, ctx, img) {
-  // Rectangle storage
-  window.rectangles = [];
-  let selectedRectIndex = -1;
-  let isResizing = false;
-  let resizeHandle = '';
-  let isDragging = false;
-  let startX, startY;
-  
-  // Function to draw all rectangles
-  function drawRectangles() {
+  // Function to initialize rectangle management - moved to global scope
+  function initRectangleManagement(canvas, ctx, img) {
+    // Rectangle storage
+    window.rectangles = [];
+    let selectedRectIndex = -1;
+    let isResizing = false;
+    let resizeHandle = "";
+    let isDragging = false;
+    let startX, startY;
+
+    // Function to draw all rectangles
+    function drawRectangles() {
       // Clear canvas and redraw image
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0);
-      
+
       // Draw all rectangles
       rectangles.forEach((rect, index) => {
-          ctx.beginPath();
-          ctx.rect(rect.x, rect.y, rect.width, rect.height);
-          
-          if (index === selectedRectIndex) {
-              ctx.strokeStyle = 'red';
-              ctx.lineWidth = 2;
-              
-              // Draw resize handles for selected rectangle
-              const handleSize = 8;
-              
-              // Top-left
-              ctx.fillStyle = 'white';
-              ctx.fillRect(rect.x - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
-              ctx.strokeRect(rect.x - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
-              
-              // Top-right
-              ctx.fillRect(rect.x + rect.width - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
-              ctx.strokeRect(rect.x + rect.width - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
-              
-              // Bottom-left
-              ctx.fillRect(rect.x - handleSize/2, rect.y + rect.height - handleSize/2, handleSize, handleSize);
-              ctx.strokeRect(rect.x - handleSize/2, rect.y + rect.height - handleSize/2, handleSize, handleSize);
-              
-              // Bottom-right
-              ctx.fillRect(rect.x + rect.width - handleSize/2, rect.y + rect.height - handleSize/2, handleSize, handleSize);
-              ctx.strokeRect(rect.x + rect.width - handleSize/2, rect.y + rect.height - handleSize/2, handleSize, handleSize);
-          } else {
-              ctx.strokeStyle = 'blue';
-              ctx.lineWidth = 1;
-          }
-          
-          ctx.stroke();
+        ctx.beginPath();
+        ctx.rect(rect.x, rect.y, rect.width, rect.height);
+
+        if (index === selectedRectIndex) {
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = 2;
+
+          // Draw resize handles for selected rectangle
+          const handleSize = 8;
+
+          // Top-left
+          ctx.fillStyle = "white";
+          ctx.fillRect(
+            rect.x - handleSize / 2,
+            rect.y - handleSize / 2,
+            handleSize,
+            handleSize
+          );
+          ctx.strokeRect(
+            rect.x - handleSize / 2,
+            rect.y - handleSize / 2,
+            handleSize,
+            handleSize
+          );
+
+          // Top-right
+          ctx.fillRect(
+            rect.x + rect.width - handleSize / 2,
+            rect.y - handleSize / 2,
+            handleSize,
+            handleSize
+          );
+          ctx.strokeRect(
+            rect.x + rect.width - handleSize / 2,
+            rect.y - handleSize / 2,
+            handleSize,
+            handleSize
+          );
+
+          // Bottom-left
+          ctx.fillRect(
+            rect.x - handleSize / 2,
+            rect.y + rect.height - handleSize / 2,
+            handleSize,
+            handleSize
+          );
+          ctx.strokeRect(
+            rect.x - handleSize / 2,
+            rect.y + rect.height - handleSize / 2,
+            handleSize,
+            handleSize
+          );
+
+          // Bottom-right
+          ctx.fillRect(
+            rect.x + rect.width - handleSize / 2,
+            rect.y + rect.height - handleSize / 2,
+            handleSize,
+            handleSize
+          );
+          ctx.strokeRect(
+            rect.x + rect.width - handleSize / 2,
+            rect.y + rect.height - handleSize / 2,
+            handleSize,
+            handleSize
+          );
+        } else {
+          ctx.strokeStyle = "blue";
+          ctx.lineWidth = 1;
+        }
+
+        ctx.stroke();
       });
-      
+
       // Update rectangle info display
-      updateRectangleInfo();
-  }
-  
-  // Function to update rectangle information display
-  function updateRectangleInfo() {
-      const infoElement = document.getElementById('rectangleInfo');
-      if (infoElement) {
-          infoElement.innerHTML = rectangles.map((rect, index) => 
-              `#${index+1}: (${Math.round(rect.x)},${Math.round(rect.y)}) ${Math.round(rect.width)}x${Math.round(rect.height)}px`
-          ).join(' | ');
-      }
-  }
-  
-  // Function to check if mouse is over a resize handle
-  function getResizeHandle(x, y) {
-      if (selectedRectIndex === -1) return '';
       
+    }
+
+    // Function to update rectangle information display
+    function updateRectangleInfo() {
+      const infoElement = document.getElementById("rectangleInfo");
+      if (infoElement) {
+        infoElement.innerHTML = rectangles
+          .map(
+            (rect, index) =>
+              `#${index + 1}: (${Math.round(rect.x)},${Math.round(
+                rect.y
+              )}) ${Math.round(rect.width)}x${Math.round(rect.height)}px`
+          )
+          .join(" | ");
+      }
+    }
+
+    // Function to check if mouse is over a resize handle
+    function getResizeHandle(x, y) {
+      if (selectedRectIndex === -1) return "";
+
       const rect = rectangles[selectedRectIndex];
       const handleSize = 8;
-      
+
       // Check each handle
-      if (Math.abs(x - rect.x) <= handleSize && Math.abs(y - rect.y) <= handleSize) {
-          return 'tl'; // top-left
-      } else if (Math.abs(x - (rect.x + rect.width)) <= handleSize && Math.abs(y - rect.y) <= handleSize) {
-          return 'tr'; // top-right
-      } else if (Math.abs(x - rect.x) <= handleSize && Math.abs(y - (rect.y + rect.height)) <= handleSize) {
-          return 'bl'; // bottom-left
-      } else if (Math.abs(x - (rect.x + rect.width)) <= handleSize && Math.abs(y - (rect.y + rect.height)) <= handleSize) {
-          return 'br'; // bottom-right
+      if (
+        Math.abs(x - rect.x) <= handleSize &&
+        Math.abs(y - rect.y) <= handleSize
+      ) {
+        return "tl"; // top-left
+      } else if (
+        Math.abs(x - (rect.x + rect.width)) <= handleSize &&
+        Math.abs(y - rect.y) <= handleSize
+      ) {
+        return "tr"; // top-right
+      } else if (
+        Math.abs(x - rect.x) <= handleSize &&
+        Math.abs(y - (rect.y + rect.height)) <= handleSize
+      ) {
+        return "bl"; // bottom-left
+      } else if (
+        Math.abs(x - (rect.x + rect.width)) <= handleSize &&
+        Math.abs(y - (rect.y + rect.height)) <= handleSize
+      ) {
+        return "br"; // bottom-right
       }
-      
-      return '';
-  }
-  
-  // Function to check if point is inside a rectangle
-  function isPointInRect(x, y, rect) {
-      return x >= rect.x && x <= rect.x + rect.width && 
-             y >= rect.y && y <= rect.y + rect.height;
-  }
-  
-  // Mouse event handlers
-  canvas.addEventListener('mousedown', function(e) {
+
+      return "";
+    }
+
+    // Function to check if point is inside a rectangle
+    function isPointInRect(x, y, rect) {
+      return (
+        x >= rect.x &&
+        x <= rect.x + rect.width &&
+        y >= rect.y &&
+        y <= rect.y + rect.height
+      );
+    }
+
+    // Mouse event handlers
+    canvas.addEventListener("mousedown", function (e) {
+      // Replace the existing mouse coordinate calculation in mousedown, mousemove events
       const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
+      const scaleX = canvas.width / rect.width; // relationship bitmap vs. element for X
+      const scaleY = canvas.height / rect.height; // relationship bitmap vs. element for Y
+
+      // Calculate accurate mouse position
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+
       // Check for resize handle first
       const handle = getResizeHandle(x, y);
       if (handle) {
-          isResizing = true;
-          resizeHandle = handle;
-          startX = x;
-          startY = y;
-          return;
+        isResizing = true;
+        resizeHandle = handle;
+        startX = x;
+        startY = y;
+        return;
       }
-      
+
       // Check if clicking on an existing rectangle
       let found = false;
       for (let i = rectangles.length - 1; i >= 0; i--) {
-          if (isPointInRect(x, y, rectangles[i])) {
-              selectedRectIndex = i;
-              isDragging = true;
-              startX = x;
-              startY = y;
-              found = true;
-              break;
-          }
+        if (isPointInRect(x, y, rectangles[i])) {
+          selectedRectIndex = i;
+          isDragging = true;
+          startX = x;
+          startY = y;
+          found = true;
+          break;
+        }
       }
-      
+
       if (!found) {
-          selectedRectIndex = -1;
+        selectedRectIndex = -1;
       }
-      
+
       drawRectangles();
-  });
-  
-  canvas.addEventListener('mousemove', function(e) {
+    });
+
+    canvas.addEventListener("mousemove", function (e) {
+      // Replace the existing mouse coordinate calculation in mousedown, mousemove events
       const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
+      const scaleX = canvas.width / rect.width; // relationship bitmap vs. element for X
+      const scaleY = canvas.height / rect.height; // relationship bitmap vs. element for Y
+
+      // Calculate accurate mouse position
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+
       // Update cursor based on position
       if (!isResizing && !isDragging) {
-          const handle = getResizeHandle(x, y);
-          if (handle === 'tl' || handle === 'br') {
-              canvas.style.cursor = 'nwse-resize';
-          } else if (handle === 'tr' || handle === 'bl') {
-              canvas.style.cursor = 'nesw-resize';
-          } else {
-              let onRect = false;
-              for (let i = 0; i < rectangles.length; i++) {
-                  if (isPointInRect(x, y, rectangles[i])) {
-                      canvas.style.cursor = 'move';
-                      onRect = true;
-                      break;
-                  }
-              }
-              if (!onRect) {
-                  canvas.style.cursor = 'default';
-              }
+        const handle = getResizeHandle(x, y);
+        if (handle === "tl" || handle === "br") {
+          canvas.style.cursor = "nwse-resize";
+        } else if (handle === "tr" || handle === "bl") {
+          canvas.style.cursor = "nesw-resize";
+        } else {
+          let onRect = false;
+          for (let i = 0; i < rectangles.length; i++) {
+            if (isPointInRect(x, y, rectangles[i])) {
+              canvas.style.cursor = "move";
+              onRect = true;
+              break;
+            }
           }
+          if (!onRect) {
+            canvas.style.cursor = "default";
+          }
+        }
       }
-      
+
       // Handle resizing
       if (isResizing && selectedRectIndex !== -1) {
-          const rect = rectangles[selectedRectIndex];
-          const dx = x - startX;
-          const dy = y - startY;
-          
-          switch (resizeHandle) {
-              case 'tl': // top-left
-                  rect.x += dx;
-                  rect.y += dy;
-                  rect.width -= dx;
-                  rect.height -= dy;
-                  break;
-              case 'tr': // top-right
-                  rect.y += dy;
-                  rect.width += dx;
-                  rect.height -= dy;
-                  break;
-              case 'bl': // bottom-left
-                  rect.x += dx;
-                  rect.width -= dx;
-                  rect.height += dy;
-                  break;
-              case 'br': // bottom-right
-                  rect.width += dx;
-                  rect.height += dy;
-                  break;
-          }
-          
-          // Ensure minimum size
-          if (rect.width < 10) rect.width = 10;
-          if (rect.height < 10) rect.height = 10;
-          
-          startX = x;
-          startY = y;
-          drawRectangles();
+        const rect = rectangles[selectedRectIndex];
+        const dx = x - startX;
+        const dy = y - startY;
+
+        switch (resizeHandle) {
+          case "tl": // top-left
+            rect.x += dx;
+            rect.y += dy;
+            rect.width -= dx;
+            rect.height -= dy;
+            break;
+          case "tr": // top-right
+            rect.y += dy;
+            rect.width += dx;
+            rect.height -= dy;
+            break;
+          case "bl": // bottom-left
+            rect.x += dx;
+            rect.width -= dx;
+            rect.height += dy;
+            break;
+          case "br": // bottom-right
+            rect.width += dx;
+            rect.height += dy;
+            break;
+        }
+
+        // Ensure minimum size
+        if (rect.width < 10) rect.width = 10;
+        if (rect.height < 10) rect.height = 10;
+
+        startX = x;
+        startY = y;
+        drawRectangles();
       }
-      
+
       // Handle dragging
       if (isDragging && selectedRectIndex !== -1 && !isResizing) {
-          const rect = rectangles[selectedRectIndex];
-          rect.x += x - startX;
-          rect.y += y - startY;
-          
-          // Keep rectangle within canvas bounds
-          if (rect.x < 0) rect.x = 0;
-          if (rect.y < 0) rect.y = 0;
-          if (rect.x + rect.width > canvas.width) rect.x = canvas.width - rect.width;
-          if (rect.y + rect.height > canvas.height) rect.y = canvas.height - rect.height;
-          
-          startX = x;
-          startY = y;
-          drawRectangles();
+        const rect = rectangles[selectedRectIndex];
+        rect.x += x - startX;
+        rect.y += y - startY;
+
+        // Keep rectangle within canvas bounds
+        if (rect.x < 0) rect.x = 0;
+        if (rect.y < 0) rect.y = 0;
+        if (rect.x + rect.width > canvas.width)
+          rect.x = canvas.width - rect.width;
+        if (rect.y + rect.height > canvas.height)
+          rect.y = canvas.height - rect.height;
+
+        startX = x;
+        startY = y;
+        drawRectangles();
       }
-  });
-  
-  canvas.addEventListener('mouseup', function() {
+    });
+
+    canvas.addEventListener("mouseup", function () {
       isResizing = false;
       isDragging = false;
-      resizeHandle = '';
-  });
-  
-  // Add rectangle button
-  document.getElementById('addRectBtn').addEventListener('click', function() {
-      // Create a new rectangle in the center of the canvas
-      const newRect = {
+      resizeHandle = "";
+    });
+
+    // Add rectangle button
+    document
+      .getElementById("addRectBtn")
+      .addEventListener("click", function () {
+        // Create a new rectangle in the center of the canvas
+        const newRect = {
           x: canvas.width / 4,
           y: canvas.height / 4,
           width: canvas.width / 2,
-          height: canvas.height / 2
-      };
-      
-      rectangles.push(newRect);
-      selectedRectIndex = rectangles.length - 1;
-      drawRectangles();
-  });
-  
-  // Remove rectangle button
-  document.getElementById('removeRectBtn').addEventListener('click', function() {
-      if (selectedRectIndex !== -1) {
+          height: canvas.height / 2,
+        };
+
+        rectangles.push(newRect);
+        selectedRectIndex = rectangles.length - 1;
+        drawRectangles();
+      });
+
+    // Remove rectangle button
+    document
+      .getElementById("removeRectBtn")
+      .addEventListener("click", function () {
+        if (selectedRectIndex !== -1) {
           rectangles.splice(selectedRectIndex, 1);
           selectedRectIndex = -1;
           drawRectangles();
-      } else {
-          alert('Please select a rectangle to remove');
-      }
-  });
-  
-  // Initial draw
-  drawRectangles();
-}
+        } else {
+          alert("Please select a rectangle to remove");
+        }
+      });
 
-// Background removal with rectangle preview
-removeBackgroundBtn.addEventListener("click", async function () {
-  // Create a preview canvas for rectangle drawing
-  const previewModal = document.createElement('div');
-  previewModal.className = 'modal fade';
-  previewModal.id = 'rectanglePreviewModal';
-  previewModal.innerHTML = `
-      <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-              <div class="modal-header">
-                  <h5 class="modal-title">Rectangle Preview</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                  <canvas id="previewCanvas" style="border:1px solid #000;"></canvas>
-                  <div class="mt-3">
-                      <button id="addRectBtn" class="btn btn-primary">Add Rectangle</button>
-                      <button id="removeRectBtn" class="btn btn-danger">Remove Selected</button>
-                  </div>
-                  <div class="mt-3">
-                      <p>Rectangles: <span id="rectangleInfo"></span></p>
-                  </div>
-              </div>
-              <div class="modal-footer">
-                  <button type="button" class="btn btn-primary" id="applyBackgroundRemoval">Apply & Remove Background</button>
-              </div>
+    // Initial draw
+    drawRectangles();
+  }
+
+  // Background removal with rectangle preview
+  removeBackgroundBtn.addEventListener("click", async function () {
+    // Create a preview canvas for rectangle drawing
+    const previewModal = document.createElement("div");
+    previewModal.className = "modal fade";
+    previewModal.id = "rectanglePreviewModal";
+    previewModal.innerHTML = `
+  <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title">Rectangle Preview</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
+          <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+          <div class="instructions-container">
+  <h4>Background Removal Instructions</h4>
+  <p>Add rectangles to specify areas you want to keep in your image. For best results:</p>
+  <ol>
+    <li>Click the <strong>Add Rectangle</strong> button to create a rectangle</li>
+    <li>Position rectangles to enclose important elements like faces, clothing, or other objects you want to preserve</li>
+    <li>Add multiple rectangles for higher precision on complex images</li>
+    <li>Use the resize handles (small white squares at corners) to adjust rectangle size</li>
+    <li>Click and drag to move rectangles to the desired position</li>
+    <li>Select a rectangle and click <strong>Remove Selected</strong> to delete it</li>
+    <li>If results are not satisfactory, undo the changes or use the remove background feature again to futher improve it</li>
+    <li>If you prefer automatic background removal without specifying areas, simply proceed without adding any rectangles</li>
+  </ol>
+  <p>Once you've positioned your rectangles, click <strong>Apply & Remove Background</strong> to process your image.</p>
+</div>
+
+              <canvas id="previewCanvas" style="border:1px solid #000; max-width: 100%; display: block;"></canvas>
+
+
+          </div>
+<div class="modal-footer d-flex justify-content-between">
+    <div>
+        <button id="addRectBtn" class="btn btn-primary me-2">Add Rectangle</button>
+        <button id="removeRectBtn" class="btn btn-danger">Remove Selected</button>
+    </div>
+    <button type="button" class="btn btn-primary" id="applyBackgroundRemoval">Apply & Remove Background</button>
+</div>
+
       </div>
-  `;
-  document.body.appendChild(previewModal);
-  
-  const previewModalInstance = new bootstrap.Modal(previewModal);
-  previewModalInstance.show();
-  
-  // Setup canvas
-  const previewCanvas = document.getElementById('previewCanvas');
-  const pctx = previewCanvas.getContext('2d');
-  
-  // Load the current image onto the preview canvas
-  const previewImg = new Image();
-  previewImg.onload = function() {
+  </div>
+`;
+
+    document.body.appendChild(previewModal);
+
+    const previewModalInstance = new bootstrap.Modal(previewModal);
+    previewModalInstance.show();
+
+    // Setup canvas
+    const previewCanvas = document.getElementById("previewCanvas");
+    const pctx = previewCanvas.getContext("2d");
+
+    // Load the current image onto the preview canvas
+    const previewImg = new Image();
+    previewImg.onload = function () {
       // Set canvas size to match image
       previewCanvas.width = previewImg.width;
       previewCanvas.height = previewImg.height;
-      
+
       // Draw image on canvas
       pctx.drawImage(previewImg, 0, 0);
-      
+
       // Initialize rectangle management
       initRectangleManagement(previewCanvas, pctx, previewImg);
-  };
-  previewImg.src = image.src;
-  
-  // Store processing state
-  let isProcessing = false;
-  let processingPromise = null;
-  
-  // Apply background removal with rectangles
-  document.getElementById('applyBackgroundRemoval').addEventListener('click', function() {
-      saveImageState();
-      
-      // Get rectangle information
-      const rectangleInfo = rectangles.map(rect => ({
+    };
+    previewImg.src = image.src;
+
+    // Store processing state
+    let isProcessing = false;
+    let processingPromise = null;
+
+    // Apply background removal with rectangles
+    document
+      .getElementById("applyBackgroundRemoval")
+      .addEventListener("click", function () {
+        saveImageState();
+
+        // Get rectangle information
+        const rectangleInfo = rectangles.map((rect) => ({
           x: rect.x,
           y: rect.y,
           width: rect.width,
-          height: rect.height
-      }));
-      
-      // Start processing
-      isProcessing = true;
-      
-      // Create a loading indicator on the main image
-      const loadingOverlay = document.createElement('div');
-      loadingOverlay.className = 'loading-overlay';
-      loadingOverlay.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
-      loadingOverlay.style.position = 'absolute';
-      loadingOverlay.style.top = '0';
-      loadingOverlay.style.left = '0';
-      loadingOverlay.style.width = '100%';
-      loadingOverlay.style.height = '100%';
-      loadingOverlay.style.display = 'flex';
-      loadingOverlay.style.alignItems = 'center';
-      loadingOverlay.style.justifyContent = 'center';
-      loadingOverlay.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
-      loadingOverlay.style.zIndex = '1000';
-      
-      const imageContainer = image.parentElement;
-      imageContainer.style.position = 'relative';
-      imageContainer.appendChild(loadingOverlay);
-      
-      // Close the modal but continue processing
-      previewModalInstance.hide();
-      
-      // Process in background
-// Process in background
-processingPromise = (async () => {
-  const formData = new FormData();
-  const blob = await fetch(image.src).then((r) => r.blob());
-  formData.append("image", blob);
-  
-  // Format rectangles as required by the backend
-  const rectanglesData = {};
-  rectangleInfo.forEach((rect, index) => {
-      // Convert each rectangle to an array of 4 doubles: [x, y, width, height]
-      rectanglesData[`rectangle${index+1}`] = [
-          rect.x, 
-          rect.y, 
-          rect.width, 
-          rect.height
-      ];
-  });
-  
-  // Add rectangles data as a JSON string parameter
-  formData.append("rectangles", JSON.stringify(rectanglesData));
-  
-  try {
-      // Use fetch with appropriate headers for multipart request with JSON body
-      const response = await fetch("/api/remove-background", {
-        method: "POST",
-        body: formData
-    });
-      
-      if (response.ok) {
-          const result = await response.blob();
-          image.src = URL.createObjectURL(result);
-          // Mark image as having transparent background
-          image.dataset.backgroundRemoved = 'true';
-      } else {
-          alert("Failed to remove background. Please try again.");
-      }
-  } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred while processing the image.");
-  } finally {
-      // Remove loading overlay
-      imageContainer.removeChild(loadingOverlay);
-      isProcessing = false;
-  }
-})();
+          height: rect.height,
+        }));
 
-  });
-  
-  // Handle modal close event - ensure processing continues
-  previewModal.addEventListener('hidden.bs.modal', function() {
+        // Start processing
+        isProcessing = true;
+
+        // Create a loading indicator on the main image
+        const loadingOverlay = document.createElement("div");
+        loadingOverlay.className = "loading-overlay";
+        loadingOverlay.innerHTML =
+          '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+        loadingOverlay.style.position = "absolute";
+        loadingOverlay.style.top = "0";
+        loadingOverlay.style.left = "0";
+        loadingOverlay.style.width = "100%";
+        loadingOverlay.style.height = "100%";
+        loadingOverlay.style.display = "flex";
+        loadingOverlay.style.alignItems = "center";
+        loadingOverlay.style.justifyContent = "center";
+        loadingOverlay.style.backgroundColor = "rgba(255, 255, 255, 0.7)";
+        loadingOverlay.style.zIndex = "1000";
+
+        const imageContainer = image.parentElement;
+        imageContainer.style.position = "relative";
+        imageContainer.appendChild(loadingOverlay);
+
+        // Close the modal but continue processing
+        previewModalInstance.hide();
+
+        // Process in background
+        // Process in background
+        processingPromise = (async () => {
+          const formData = new FormData();
+          const blob = await fetch(image.src).then((r) => r.blob());
+          formData.append("image", blob);
+
+          // Format rectangles as required by the backend
+          const rectanglesData = {};
+          rectangleInfo.forEach((rect, index) => {
+            // Convert each rectangle to an array of 4 doubles: [x, y, width, height]
+            rectanglesData[`rectangle${index + 1}`] = [
+              rect.x,
+              rect.y,
+              rect.width,
+              rect.height,
+            ];
+          });
+
+          // Add rectangles data as a JSON string parameter
+          formData.append("rectangles", JSON.stringify(rectanglesData));
+
+          try {
+            // Use fetch with appropriate headers for multipart request with JSON body
+            const response = await fetch("/api/remove-background", {
+              method: "POST",
+              body: formData,
+            });
+
+            if (response.ok) {
+              const result = await response.blob();
+              image.src = URL.createObjectURL(result);
+              // Mark image as having transparent background
+              image.dataset.backgroundRemoved = "true";
+            } else {
+              alert("Failed to remove background. Please try again.");
+            }
+          } catch (error) {
+            console.error("Error:", error);
+            alert("An error occurred while processing the image.");
+          } finally {
+            // Remove loading overlay
+            imageContainer.removeChild(loadingOverlay);
+            isProcessing = false;
+          }
+        })();
+      });
+
+    // Handle modal close event - ensure processing continues
+    previewModal.addEventListener("hidden.bs.modal", function () {
       // Remove the modal from DOM after hiding
       document.body.removeChild(previewModal);
-      
+
       // If processing hasn't started yet and user just closed the modal, clean up
       if (!isProcessing && !processingPromise) {
-          console.log("Modal closed without processing");
+        console.log("Modal closed without processing");
       }
+    });
   });
-});
-
 
   // Background color selection
   document.querySelectorAll(".color-btn").forEach((btn) => {
@@ -661,13 +754,12 @@ processingPromise = (async () => {
           const result = await response.blob();
           image.src = URL.createObjectURL(result);
           // Mark image as not having transparent background
-          image.dataset.backgroundRemoved = 'false';
+          image.dataset.backgroundRemoved = "false";
         }
       } catch (error) {
         console.error("Error:", error);
         alert("An error occurred while changing the background color.");
       }
-
     });
   });
 
@@ -684,10 +776,12 @@ processingPromise = (async () => {
     applyClothesTemplate("bluesuit");
   });
 
-  document.getElementById("blackSuitBtn").addEventListener("click", function () {
-    selectedTemplate = "blacksuit"; // Set template to tshirt
-    applyClothesTemplate("blacksuit");
-  });
+  document
+    .getElementById("blackSuitBtn")
+    .addEventListener("click", function () {
+      selectedTemplate = "blacksuit"; // Set template to tshirt
+      applyClothesTemplate("blacksuit");
+    });
 
   document.getElementById("graySuitBtn").addEventListener("click", function () {
     selectedTemplate = "graysuit"; // Set template to casual
@@ -697,7 +791,7 @@ processingPromise = (async () => {
   // When the confirm button is clicked in the clothes modal
   confirmClothesBtn.addEventListener("click", function () {
     // Save the current state of the image in the modal
-    saveImageState(); 
+    saveImageState();
 
     // Check if a template is selected, and apply it
     if (selectedTemplate) {
@@ -709,7 +803,7 @@ processingPromise = (async () => {
     }
 
     // Update the main image on the screen with the image in the modal
-    image.src = clothesImage.src; 
+    image.src = clothesImage.src;
 
     // Close the modal after confirmation
     clothesModal.hide();
@@ -724,46 +818,45 @@ processingPromise = (async () => {
 
     // Fetch the user image as a blob
     fetch(image.src)
-      .then(response => response.blob())
-      .then(blob => {
-        formData.append("image", blob);  // Append the user image to formData
-        formData.append("templateName", template);  // Append the selected template name
+      .then((response) => response.blob())
+      .then((blob) => {
+        formData.append("image", blob); // Append the user image to formData
+        formData.append("templateName", template); // Append the selected template name
 
         // Send the request to replace clothes
         fetch("/api/replace-clothes", {
           method: "POST",
-          body: formData,  // Send the form data with image and template name
+          body: formData, // Send the form data with image and template name
         })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`Request failed with status: ${response.status}`);
-          }
-          return response.blob();
-        })
-        .then(blob => {
-          const objectURL = URL.createObjectURL(blob);
-          clothesImage.src = objectURL; // Set the result image to the clothes image
-        })
-        .catch(error => {
-          console.error("Error applying clothes:", error);
-          alert("An error occurred while applying the clothes template.");
-        });
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`Request failed with status: ${response.status}`);
+            }
+            return response.blob();
+          })
+          .then((blob) => {
+            const objectURL = URL.createObjectURL(blob);
+            clothesImage.src = objectURL; // Set the result image to the clothes image
+          })
+          .catch((error) => {
+            console.error("Error applying clothes:", error);
+            alert("An error occurred while applying the clothes template.");
+          });
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching user image:", error);
       });
   }
 
-
   function getClothesImage(template) {
     // Replace with server-side path to fetch the clothes images
     switch (template) {
-      case 'bluesuit':
-        return fetchImageFile('../images/bluesuit.png'); // Update path as per resources/static/images
-      case 'blacksuit':
-        return fetchImageFile('../images/blacksuit.png'); // Update path as per resources/static/images
-      case 'graysuit':
-        return fetchImageFile('../images/graysuit.png'); // Update path as per resources/static/images
+      case "bluesuit":
+        return fetchImageFile("../images/bluesuit.png"); // Update path as per resources/static/images
+      case "blacksuit":
+        return fetchImageFile("../images/blacksuit.png"); // Update path as per resources/static/images
+      case "graysuit":
+        return fetchImageFile("../images/graysuit.png"); // Update path as per resources/static/images
       default:
         return null;
     }
@@ -771,8 +864,8 @@ processingPromise = (async () => {
 
   function fetchImageFile(imagePath) {
     return fetch(imagePath)
-      .then(response => response.blob())
-      .catch(error => {
+      .then((response) => response.blob())
+      .catch((error) => {
         console.error("Error fetching template image:", error);
         return null;
       });
@@ -781,6 +874,10 @@ processingPromise = (async () => {
   // Export functionality
   exportBtn.addEventListener("click", async function () {
     const canvas = document.createElement("canvas");
+    // Add this when initializing the canvas
+    canvas.width = img.width;
+    canvas.height = img.height;
+
     const ctx = canvas.getContext("2d");
 
     // Get the original image
@@ -827,40 +924,43 @@ processingPromise = (async () => {
 
   // Clean up multiple event listeners to have just one
   // Remove all previous event listeners from enhanceBtn (not working in this example, but good practice)
-  const enhanceBtn = document.getElementById('enhanceBtn');
+  const enhanceBtn = document.getElementById("enhanceBtn");
   const newEnhanceBtn = enhanceBtn.cloneNode(true);
   enhanceBtn.parentNode.replaceChild(newEnhanceBtn, enhanceBtn);
 
   // Add single event listener for enhance button
-  document.getElementById('enhanceBtn').addEventListener('click', function(e) {
+  document.getElementById("enhanceBtn").addEventListener("click", function (e) {
     e.preventDefault();
-    
-    if (!document.getElementById('image').src || document.getElementById('image').src === window.location.href) {
-      alert('Please upload an image first');
+
+    if (
+      !document.getElementById("image").src ||
+      document.getElementById("image").src === window.location.href
+    ) {
+      alert("Please upload an image first");
       return;
     }
-    
+
     // Store a copy of the current image for enhancement
-    const currentImg = document.getElementById('image');
+    const currentImg = document.getElementById("image");
     originalImageForEnhancement = new Image();
     originalImageForEnhancement.src = currentImg.src;
-    
+
     // Wait for image to load before proceeding
-    originalImageForEnhancement.onload = function() {
+    originalImageForEnhancement.onload = function () {
       // Check if the image has a transparent background
       hasTransparentBackground = checkForTransparentBackground(currentImg);
-      
+
       // Set the preview image in the modal
-      const previewImg = document.getElementById('enhancePreviewImg');
+      const previewImg = document.getElementById("enhancePreviewImg");
       previewImg.src = currentImg.src;
-      
+
       // Reset sliders to default values
-      document.getElementById('brightnessSlider').value = 0;
-      document.getElementById('contrastSlider').value = 0;
-      document.getElementById('smoothnessSlider').value = 30;
-      
+      document.getElementById("brightnessSlider").value = 0;
+      document.getElementById("contrastSlider").value = 0;
+      document.getElementById("smoothnessSlider").value = 30;
+
       // Show the modal
-      const enhanceModalElement = document.getElementById('enhanceModal');
+      const enhanceModalElement = document.getElementById("enhanceModal");
       if (enhanceModalElement) {
         const enhanceModal = new bootstrap.Modal(enhanceModalElement);
         enhanceModal.show();
@@ -874,34 +974,36 @@ processingPromise = (async () => {
   // Function to check if image has transparent background
   function checkForTransparentBackground(img) {
     // If we've previously removed the background or the image URL contains indicators
-    return img.dataset.backgroundRemoved === 'true' || 
-           img.src.includes('data:image/png') || 
-           img.src.includes('background');
+    return (
+      img.dataset.backgroundRemoved === "true" ||
+      img.src.includes("data:image/png") ||
+      img.src.includes("background")
+    );
   }
 
   // Apply enhancement in real-time as sliders change
-  const brightnessSlider = document.getElementById('brightnessSlider');
-  const contrastSlider = document.getElementById('contrastSlider');
-  const smoothnessSlider = document.getElementById('smoothnessSlider');
+  const brightnessSlider = document.getElementById("brightnessSlider");
+  const contrastSlider = document.getElementById("contrastSlider");
+  const smoothnessSlider = document.getElementById("smoothnessSlider");
 
   // Add input event listeners to all sliders for real-time updates
-  [brightnessSlider, contrastSlider, smoothnessSlider].forEach(slider => {
+  [brightnessSlider, contrastSlider, smoothnessSlider].forEach((slider) => {
     if (slider) {
-      slider.addEventListener('input', updateEnhancementPreview);
+      slider.addEventListener("input", updateEnhancementPreview);
     }
   });
 
   function updateEnhancementPreview() {
     if (!originalImageForEnhancement) return;
-    
+
     const brightness = parseInt(brightnessSlider.value);
     const contrast = parseInt(contrastSlider.value);
     const smoothness = parseInt(smoothnessSlider.value);
-    
+
     // Show real-time changes in the preview image
     applyClientSideEnhancements(
-      originalImageForEnhancement, 
-      document.getElementById('enhancePreviewImg'),
+      originalImageForEnhancement,
+      document.getElementById("enhancePreviewImg"),
       brightness,
       contrast,
       smoothness,
@@ -910,16 +1012,23 @@ processingPromise = (async () => {
   }
 
   // This is the improved client-side version for real-time feedback with better transparency handling
-  function applyClientSideEnhancements(sourceImg, targetImg, brightness, contrast, smoothness, preserveTransparency) {
+  function applyClientSideEnhancements(
+    sourceImg,
+    targetImg,
+    brightness,
+    contrast,
+    smoothness,
+    preserveTransparency
+  ) {
     // Create a canvas with proper alpha channel support and color management
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = sourceImg.naturalWidth;
     canvas.height = sourceImg.naturalHeight;
-    const ctx = canvas.getContext('2d', { 
+    const ctx = canvas.getContext("2d", {
       alpha: true,
-      colorSpace: 'srgb' // Explicitly set color space
+      colorSpace: "srgb", // Explicitly set color space
     });
-    
+
     // Clear the canvas with white background first (helps with color consistency)
     if (preserveTransparency) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -927,103 +1036,126 @@ processingPromise = (async () => {
       ctx.fillStyle = "#FFFFFF";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-    
+
     // Draw the image onto the canvas
     ctx.drawImage(sourceImg, 0, 0);
-    
+
     // Get the image data with alpha channel
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
-    
+
     // Skip processing if no adjustments are needed
     if (brightness === 0 && contrast === 0 && smoothness === 0) {
       targetImg.src = sourceImg.src;
       return;
     }
-    
+
     // Create a copy of the image data for skin smoothing
     let smoothedData = null;
     if (smoothness > 0) {
       // Create a simple blur version for skin smoothing
-      const tempCanvas = document.createElement('canvas');
-      const tempCtx = tempCanvas.getContext('2d', { alpha: true });
+      const tempCanvas = document.createElement("canvas");
+      const tempCtx = tempCanvas.getContext("2d", { alpha: true });
       tempCanvas.width = canvas.width;
       tempCanvas.height = canvas.height;
-      
+
       // Draw the image and apply a blur filter
       tempCtx.drawImage(sourceImg, 0, 0);
       tempCtx.filter = `blur(${smoothness / 20}px)`;
       tempCtx.drawImage(tempCanvas, 0, 0);
-      
+
       // Get the blurred data
-      smoothedData = tempCtx.getImageData(0, 0, canvas.width, canvas.height).data;
+      smoothedData = tempCtx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      ).data;
     }
-    
+
     // Process every pixel
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i];
-      const g = data[i+1];
-      const b = data[i+2];
-      const a = data[i+3]; // Alpha channel
-      
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3]; // Alpha channel
+
       // Skip completely transparent pixels
       if (a === 0) continue;
-      
+
       // Skip background pixels if preserving transparency
-      if (preserveTransparency && (r > 240 && g > 240 && b > 240 && a < 255)) {
+      if (preserveTransparency && r > 240 && g > 240 && b > 240 && a < 255) {
         continue;
       }
-      
+
       // Apply contrast adjustment
       let newR = r;
       let newG = g;
       let newB = b;
-      
+
       if (contrast !== 0) {
         const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
-        newR = Math.max(0, Math.min(255, Math.round(factor * (newR - 128) + 128)));
-        newG = Math.max(0, Math.min(255, Math.round(factor * (newG - 128) + 128)));
-        newB = Math.max(0, Math.min(255, Math.round(factor * (newB - 128) + 128)));
+        newR = Math.max(
+          0,
+          Math.min(255, Math.round(factor * (newR - 128) + 128))
+        );
+        newG = Math.max(
+          0,
+          Math.min(255, Math.round(factor * (newG - 128) + 128))
+        );
+        newB = Math.max(
+          0,
+          Math.min(255, Math.round(factor * (newB - 128) + 128))
+        );
       }
-      
+
       // Apply brightness adjustment
       if (brightness !== 0) {
         newR = Math.max(0, Math.min(255, newR + brightness));
         newG = Math.max(0, Math.min(255, newG + brightness));
         newB = Math.max(0, Math.min(255, newB + brightness));
       }
-      
+
       // Apply skin smoothing if enabled
       if (smoothness > 0) {
         // Check if this pixel is likely to be skin using YCrCb approximation
         const isSkin = isSkinTone(r, g, b);
-        
+
         if (isSkin) {
           const smoothFactor = smoothness / 100;
-          
+
           // Blend original (adjusted) pixel with the blurred version
-          newR = Math.round(newR * (1 - smoothFactor) + smoothedData[i] * smoothFactor);
-          newG = Math.round(newG * (1 - smoothFactor) + smoothedData[i+1] * smoothFactor);
-          newB = Math.round(newB * (1 - smoothFactor) + smoothedData[i+2] * smoothFactor);
+          newR = Math.round(
+            newR * (1 - smoothFactor) + smoothedData[i] * smoothFactor
+          );
+          newG = Math.round(
+            newG * (1 - smoothFactor) + smoothedData[i + 1] * smoothFactor
+          );
+          newB = Math.round(
+            newB * (1 - smoothFactor) + smoothedData[i + 2] * smoothFactor
+          );
         }
       }
-      
+
       // Fix for blue tint - slightly boost red channel
       newR = Math.min(255, Math.round(newR * 1.05));
-      
+
       // Update the pixel data (but keep original alpha)
       data[i] = newR;
-      data[i+1] = newG;
-      data[i+2] = newB;
+      data[i + 1] = newG;
+      data[i + 2] = newB;
       // data[i+3] remains unchanged to preserve transparency
     }
-    
+
     // Put the modified image data back to the canvas
     ctx.putImageData(imageData, 0, 0);
-    
+
     // Set the result to the target image with proper format
-    targetImg.src = canvas.toDataURL(preserveTransparency ? 'image/png' : 'image/jpeg', 0.95);
-}
+    targetImg.src = canvas.toDataURL(
+      preserveTransparency ? "image/png" : "image/jpeg",
+      0.95
+    );
+  }
 
   // Helper function to detect skin tones using a more accurate YCrCb-approximation method
   function isSkinTone(r, g, b) {
@@ -1031,180 +1163,189 @@ processingPromise = (async () => {
     const y = 0.299 * r + 0.587 * g + 0.114 * b;
     const cr = r - y + 128;
     const cb = b - y + 128;
-    
+
     // Standard skin tone range in YCrCb color space
-    const skinRegion = (cr >= 135 && cr <= 180 && cb >= 85 && cb <= 135);
-    
+    const skinRegion = cr >= 135 && cr <= 180 && cb >= 85 && cb <= 135;
+
     // Additional check for certain skin tones
-    const skinRegionRGB = (r > 95 && g > 40 && b > 20 && 
-                          r > g && r > b && 
-                          Math.abs(r - g) > 15);
-    
+    const skinRegionRGB =
+      r > 95 && g > 40 && b > 20 && r > g && r > b && Math.abs(r - g) > 15;
+
     return skinRegion || skinRegionRGB;
   }
 
   // Apply enhancement button functionality - this function uses server-side processing for final image
   // Apply enhancement button functionality - updated to use client-side processing for final image
-document.getElementById('applyEnhanceBtn').addEventListener('click', async function() {
-  if (!originalImageForEnhancement) return;
-  
-  const brightness = parseInt(brightnessSlider.value);
-  const contrast = parseInt(contrastSlider.value);
-  const smoothness = parseInt(smoothnessSlider.value);
-  
-  try {
-    // Save the current state before making changes
-    saveImageState();
-    
-    // Show loading indicator
-    const mainImage = document.getElementById('image');
-    mainImage.style.opacity = "0.6";
-    
-    // Instead of sending to server, apply the same client-side enhancements for the final image
-    const tempImg = new Image();
-    tempImg.onload = function() {
-      // Create a canvas for the final output
-      const canvas = document.createElement('canvas');
-      canvas.width = tempImg.naturalWidth;
-      canvas.height = tempImg.naturalHeight;
-      const ctx = canvas.getContext('2d', { alpha: true });
-      
-      // Use the same enhancement function that works for the preview
-      applyClientSideEnhancements(
-        originalImageForEnhancement,
-        tempImg,
-        brightness,
-        contrast,
-        smoothness,
-        hasTransparentBackground
-      );
-      
-      // Wait for the temp image to update
-      tempImg.onload = function() {
-        // Apply the result to the main image
-        mainImage.src = tempImg.src;
-        mainImage.style.opacity = "1";
-        
-        // Close the modal properly
-        const enhanceModal = bootstrap.Modal.getInstance(document.getElementById('enhanceModal'));
-        if (enhanceModal) {
-          enhanceModal.hide();
-        }
-        
-        // Clean up modal backdrops
-        setTimeout(() => {
-          document.body.classList.remove('modal-open');
-          const backdrops = document.querySelectorAll('.modal-backdrop');
-          backdrops.forEach(el => el.remove());
-        }, 200);
-      };
-    };
-    
-    tempImg.src = originalImageForEnhancement.src;
-    
-  } catch (error) {
-    console.error("Error enhancing photo:", error);
-    alert("An error occurred while enhancing the photo.");
-    document.getElementById('image').style.opacity = "1";
-  }
-});
+  document
+    .getElementById("applyEnhanceBtn")
+    .addEventListener("click", async function () {
+      if (!originalImageForEnhancement) return;
+
+      const brightness = parseInt(brightnessSlider.value);
+      const contrast = parseInt(contrastSlider.value);
+      const smoothness = parseInt(smoothnessSlider.value);
+
+      try {
+        // Save the current state before making changes
+        saveImageState();
+
+        // Show loading indicator
+        const mainImage = document.getElementById("image");
+        mainImage.style.opacity = "0.6";
+
+        // Instead of sending to server, apply the same client-side enhancements for the final image
+        const tempImg = new Image();
+        tempImg.onload = function () {
+          // Create a canvas for the final output
+          const canvas = document.createElement("canvas");
+          canvas.width = tempImg.naturalWidth;
+          canvas.height = tempImg.naturalHeight;
+          const ctx = canvas.getContext("2d", { alpha: true });
+
+          // Use the same enhancement function that works for the preview
+          applyClientSideEnhancements(
+            originalImageForEnhancement,
+            tempImg,
+            brightness,
+            contrast,
+            smoothness,
+            hasTransparentBackground
+          );
+
+          // Wait for the temp image to update
+          tempImg.onload = function () {
+            // Apply the result to the main image
+            mainImage.src = tempImg.src;
+            mainImage.style.opacity = "1";
+
+            // Close the modal properly
+            const enhanceModal = bootstrap.Modal.getInstance(
+              document.getElementById("enhanceModal")
+            );
+            if (enhanceModal) {
+              enhanceModal.hide();
+            }
+
+            // Clean up modal backdrops
+            setTimeout(() => {
+              document.body.classList.remove("modal-open");
+              const backdrops = document.querySelectorAll(".modal-backdrop");
+              backdrops.forEach((el) => el.remove());
+            }, 200);
+          };
+        };
+
+        tempImg.src = originalImageForEnhancement.src;
+      } catch (error) {
+        console.error("Error enhancing photo:", error);
+        alert("An error occurred while enhancing the photo.");
+        document.getElementById("image").style.opacity = "1";
+      }
+    });
 
   // Make sure the modal properly cleans up when hidden
-  const enhanceModalElement = document.getElementById('enhanceModal');
+  const enhanceModalElement = document.getElementById("enhanceModal");
   if (enhanceModalElement) {
-    enhanceModalElement.addEventListener('hidden.bs.modal', function () {
+    enhanceModalElement.addEventListener("hidden.bs.modal", function () {
       // Reset everything when modal is closed
       originalImageForEnhancement = null;
-      const previewImg = document.getElementById('enhancePreviewImg');
+      const previewImg = document.getElementById("enhancePreviewImg");
       if (previewImg) {
-        previewImg.src = '';
+        previewImg.src = "";
       }
     });
   }
 
   // Cancel button handler
-  const cancelBtn = document.querySelector('#enhanceModal .btn-secondary');
+  const cancelBtn = document.querySelector("#enhanceModal .btn-secondary");
   if (cancelBtn) {
-    cancelBtn.addEventListener('click', function() {
-      const enhanceModalEl = document.getElementById('enhanceModal');
+    cancelBtn.addEventListener("click", function () {
+      const enhanceModalEl = document.getElementById("enhanceModal");
       const enhanceModalInstance = bootstrap.Modal.getInstance(enhanceModalEl);
-      
+
       if (enhanceModalInstance) {
         // Clear any modified preview before closing
-        const previewImg = document.getElementById('enhancePreviewImg');
+        const previewImg = document.getElementById("enhancePreviewImg");
         if (originalImageForEnhancement && previewImg) {
           previewImg.src = originalImageForEnhancement.src;
         }
-        
+
         // Close the modal
         enhanceModalInstance.hide();
-        
+
         // Additional cleanup
         setTimeout(() => {
-          document.body.classList.remove('modal-open');
-          document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+          document.body.classList.remove("modal-open");
+          document
+            .querySelectorAll(".modal-backdrop")
+            .forEach((el) => el.remove());
         }, 200);
       }
     });
   }
 
   // Also ensure modal close button (×) works
-  const closeBtn = document.querySelector('#enhanceModal .btn-close');
+  const closeBtn = document.querySelector("#enhanceModal .btn-close");
   if (closeBtn) {
-    closeBtn.addEventListener('click', function() {
+    closeBtn.addEventListener("click", function () {
       // Ensure modal is properly closed
-      const enhanceModalEl = document.getElementById('enhanceModal');
+      const enhanceModalEl = document.getElementById("enhanceModal");
       const enhanceModalInstance = bootstrap.Modal.getInstance(enhanceModalEl);
-      
+
       if (enhanceModalInstance) {
         enhanceModalInstance.hide();
-        
+
         // Additional cleanup for proper modal removal
         setTimeout(() => {
-          document.body.classList.remove('modal-open');
-          document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+          document.body.classList.remove("modal-open");
+          document
+            .querySelectorAll(".modal-backdrop")
+            .forEach((el) => el.remove());
         }, 150);
       }
     });
   }
 
   // Compliance Checker logic
-const checkBtn = document.getElementById("checkBtn");
-const complianceResult = document.getElementById("complianceResult");
+  const checkBtn = document.getElementById("checkBtn");
+  const complianceResult = document.getElementById("complianceResult");
 
-checkBtn.addEventListener("click", async () => {
-  if (!image.src || image.src === window.location.href) {
-    alert("Please upload an image first.");
-    return;
-  }
+  checkBtn.addEventListener("click", async () => {
+    if (!image.src || image.src === window.location.href) {
+      alert("Please upload an image first.");
+      return;
+    }
 
-  try {
-    complianceResult.textContent = "Checking compliance...";
-    complianceResult.classList.remove("text-danger", "text-success");
+    try {
+      complianceResult.textContent = "Checking compliance...";
+      complianceResult.classList.remove("text-danger", "text-success");
 
-    const blob = await fetch(image.src).then(res => res.blob());
-    const formData = new FormData();
-    formData.append("file", blob, "image.png");
+      const blob = await fetch(image.src).then((res) => res.blob());
+      const formData = new FormData();
+      formData.append("file", blob, "image.png");
 
-    const response = await fetch("/api/check-compliance", {
-      method: "POST",
-      body: formData,
-    });
+      const response = await fetch("/api/check-compliance", {
+        method: "POST",
+        body: formData,
+      });
 
-    const result = await response.json();
+      const result = await response.json();
 
-    if (result.status === "Pass") {
-      complianceResult.textContent = `✅ ${result.details || "Photo passed compliance check."}`;
-      complianceResult.classList.add("text-success");
-    } else {
-      complianceResult.textContent = `❌ ${result.reason || "Photo failed compliance check."}`;
+      if (result.status === "Pass") {
+        complianceResult.textContent = `✅ ${
+          result.details || "Photo passed compliance check."
+        }`;
+        complianceResult.classList.add("text-success");
+      } else {
+        complianceResult.textContent = `❌ ${
+          result.reason || "Photo failed compliance check."
+        }`;
+        complianceResult.classList.add("text-danger");
+      }
+    } catch (error) {
+      console.error("Compliance check failed:", error);
+      complianceResult.textContent = "❌ Error checking compliance.";
       complianceResult.classList.add("text-danger");
     }
-  } catch (error) {
-    console.error("Compliance check failed:", error);
-    complianceResult.textContent = "❌ Error checking compliance.";
-    complianceResult.classList.add("text-danger");
-  }
-});
-
+  });
 });
