@@ -484,77 +484,70 @@ document.addEventListener("DOMContentLoaded", function () {
         previewModal.className = "modal fade";
         previewModal.id = "rectanglePreviewModal";
         previewModal.innerHTML = `
-  <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-          <div class="modal-header">
-              <h5 class="modal-title">Rectangle Preview</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-          <div class="instructions-container">
-  <h4>Background Removal Instructions</h4>
-  <p>Add rectangles to specify areas you want to keep in your image. For best results:</p>
-  <ol>
-    <li>Click the <strong>Add Rectangle</strong> button to create a rectangle</li>
-    <li>Position rectangles to enclose important elements like faces, clothing, or other objects you want to preserve</li>
-    <li>Add multiple rectangles for higher precision on complex images</li>
-    <li>Use the resize handles (small white squares at corners) to adjust rectangle size</li>
-    <li>Click and drag to move rectangles to the desired position</li>
-    <li>Select a rectangle and click <strong>Remove Selected</strong> to delete it</li>
-    <li>If results are not satisfactory, undo the changes or use the remove background feature again to futher improve it</li>
-    <li>If you prefer automatic background removal without specifying areas, simply proceed without adding any rectangles</li>
-  </ol>
-  <p>Once you've positioned your rectangles, click <strong>Apply & Remove Background</strong> to process your image.</p>
-</div>
-
-              <canvas id="previewCanvas" style="border:1px solid #000; max-width: 100%; display: block;"></canvas>
-
-
-          </div>
-<div class="modal-footer d-flex justify-content-between">
-    <div>
-        <button id="addRectBtn" class="btn btn-primary me-2">Add Rectangle</button>
-        <button id="removeRectBtn" class="btn btn-danger">Remove Selected</button>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Background Removal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <div class="instructions-container mb-3">
+                    <p class="mb-2">Draw rectangles around areas to keep in your image:</p>
+                    <ul class="small">
+                        <li>Click <strong>Add Rectangle</strong>  to create a selection area</li>
+                        <li>Drag the corners to resize the rectangle</li>
+                        <li>Add multiple rectangles for complex images</li>
+                        <li><strong>Do not use a rectangle</strong> for fully automatic background removal</li>
+                    </ul>
+                </div>
+    
+                <div class="text-center">
+                    <canvas id="previewCanvas" style="border:1px solid #ddd; max-width: 80%; height: auto; display: inline-block;"></canvas>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <div>
+                    <button id="addRectBtn" class="btn btn-primary btn-sm me-2">Add New Rectangle</button>
+                    <button id="removeRectBtn" class="btn btn-danger btn-sm">Remove Selected Rectangle</button>
+                </div>
+                <button type="button" class="btn btn-primary" id="applyBackgroundRemoval">Remove Background</button>
+            </div>
+        </div>
     </div>
-    <button type="button" class="btn btn-primary" id="applyBackgroundRemoval">Apply & Remove Background</button>
-</div>
-
-      </div>
-  </div>
-`;
-
+    `;
+    
         document.body.appendChild(previewModal);
-
+    
         const previewModalInstance = new bootstrap.Modal(previewModal);
         previewModalInstance.show();
-
+    
         // Setup canvas
         const previewCanvas = document.getElementById("previewCanvas");
         const pctx = previewCanvas.getContext("2d");
-
+    
         // Load the current image onto the preview canvas
         const previewImg = new Image();
         previewImg.onload = function () {
             // Set canvas size to match image
             previewCanvas.width = previewImg.width;
             previewCanvas.height = previewImg.height;
-
+    
             // Draw image on canvas
             pctx.drawImage(previewImg, 0, 0);
-
+    
             // Initialize rectangle management
             initRectangleManagement(previewCanvas, pctx, previewImg);
         };
         previewImg.src = image.src;
-
+    
         // Store processing state
         let isProcessing = false;
         let processingPromise = null;
-
+    
         // Apply background removal with rectangles
         document.getElementById("applyBackgroundRemoval").addEventListener("click", function () {
             saveImageState();
-
+    
             // Get rectangle information
             const rectangleInfo = rectangles.map((rect) => ({
                 x: rect.x,
@@ -562,10 +555,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 width: rect.width,
                 height: rect.height,
             }));
-
+    
             // Start processing
             isProcessing = true;
-
+    
             // Create a loading indicator on the main image
             const loadingOverlay = document.createElement("div");
             loadingOverlay.className = "loading-overlay";
@@ -580,40 +573,41 @@ document.addEventListener("DOMContentLoaded", function () {
             loadingOverlay.style.justifyContent = "center";
             loadingOverlay.style.backgroundColor = "rgba(255, 255, 255, 0.7)";
             loadingOverlay.style.zIndex = "1000";
-
+    
             const imageContainer = image.parentElement;
             imageContainer.style.position = "relative";
             imageContainer.appendChild(loadingOverlay);
-
+    
             // Close the modal but continue processing
             previewModalInstance.hide();
-
-            // Process in background
+    
             // Process in background
             processingPromise = (async () => {
                 const formData = new FormData();
                 const blob = await fetch(image.src).then((r) => r.blob());
                 formData.append("image", blob);
-
+    
                 // Format rectangles as required by the backend
                 const rectanglesData = {};
                 rectangleInfo.forEach((rect, index) => {
                     // Convert each rectangle to an array of 4 doubles: [x, y, width, height]
                     rectanglesData[`rectangle${index + 1}`] = [rect.x, rect.y, rect.width, rect.height];
                 });
-
+    
                 // Add rectangles data as a JSON string parameter
                 formData.append("rectangles", JSON.stringify(rectanglesData));
-
+    
                 try {
                     // Use fetch with appropriate headers for multipart request with JSON body
                     const response = await fetch("/api/remove-background", {
                         method: "POST",
                         body: formData,
                     });
-
+    
                     if (response.ok) {
                         const result = await response.blob();
+                        // Store a copy of the transparent version
+                        originalTransparentImage = result.slice(0);
                         image.src = URL.createObjectURL(result);
                         // Mark image as having transparent background
                         image.dataset.backgroundRemoved = "true";
@@ -630,12 +624,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             })();
         });
-
+    
         // Handle modal close event - ensure processing continues
         previewModal.addEventListener("hidden.bs.modal", function () {
             // Remove the modal from DOM after hiding
             document.body.removeChild(previewModal);
-
+    
             // If processing hasn't started yet and user just closed the modal, clean up
             if (!isProcessing && !processingPromise) {
                 console.log("Modal closed without processing");
@@ -649,6 +643,15 @@ document.addEventListener("DOMContentLoaded", function () {
             saveImageState();
             const color = this.dataset.color;
             const formData = new FormData();
+
+            // Use the original transparent image if available
+            let sourceImage;
+            if (originalTransparentImage && image.dataset.backgroundRemoved === "true") {
+                sourceImage = originalTransparentImage.slice(0);
+            } else {
+                sourceImage = await fetch(image.src).then((r) => r.blob());
+            }
+
             const blob = await fetch(image.src).then((r) => r.blob());
             formData.append("image", blob);
             formData.append("backgroundColor", color);

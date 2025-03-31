@@ -5,8 +5,11 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.*;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -72,8 +75,8 @@ public class ImageProcessingService {
                         (int) (resized.rows() * (entry.getValue().get(1) / image.height())), // y (5% from top)
                         (int) (resized.cols() * (entry.getValue().get(2) / image.width())), // width (50% of image)
                         (int) (resized.rows() * (entry.getValue().get(3) / image.height())) // height (spans the top 70%
-                                                                                            // to
-                                                                                            // overlap with rect2)
+                // to
+                // overlap with rect2)
                 );
                 rectangles.add(rect1);
 
