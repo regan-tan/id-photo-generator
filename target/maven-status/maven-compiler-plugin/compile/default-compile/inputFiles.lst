@@ -1,8 +1,8 @@
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service\ComplianceCheckerService.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service\ImageProcessingService.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service\ClothesReplacementService.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\controller\ImageController.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service\PhotoEnhancementService.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\IdPhotoGeneratorApplication.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service\DownloadFile.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service\UploadImage.java
+C:\Java Scripts\IS442-G2\Proj\id-photo-generator\src\main\java\com\example\idphotogenerator\service\DownloadFile.java
+C:\Java Scripts\IS442-G2\Proj\id-photo-generator\src\main\java\com\example\idphotogenerator\service\UploadImage.java
+C:\Java Scripts\IS442-G2\Proj\id-photo-generator\src\main\java\com\example\idphotogenerator\service\ClothesReplacementService.java
+C:\Java Scripts\IS442-G2\Proj\id-photo-generator\src\main\java\com\example\idphotogenerator\controller\ImageController.java
+C:\Java Scripts\IS442-G2\Proj\id-photo-generator\src\main\java\com\example\idphotogenerator\IdPhotoGeneratorApplication.java
+C:\Java Scripts\IS442-G2\Proj\id-photo-generator\src\main\java\com\example\idphotogenerator\service\ImageProcessingService.java
+C:\Java Scripts\IS442-G2\Proj\id-photo-generator\src\main\java\com\example\idphotogenerator\service\PhotoEnhancementService.java
+C:\Java Scripts\IS442-G2\Proj\id-photo-generator\src\main\java\com\example\idphotogenerator\service\ComplianceCheckerService.java

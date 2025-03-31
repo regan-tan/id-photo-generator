@@ -1,7 +1,9 @@
-com\example\idphotogenerator\service\ImageProcessingService.class
-com\example\idphotogenerator\service\ClothesReplacementService.class
 com\example\idphotogenerator\service\ComplianceCheckerService.class
-com\example\idphotogenerator\IdPhotoGeneratorApplication.class
 com\example\idphotogenerator\service\PhotoEnhancementService.class
-com\example\idphotogenerator\service\UploadImage.class
 com\example\idphotogenerator\service\DownloadFile.class
+com\example\idphotogenerator\service\ImageProcessingService.class
+com\example\idphotogenerator\controller\ImageController.class
+com\example\idphotogenerator\service\ClothesReplacementService.class
+com\example\idphotogenerator\IdPhotoGeneratorApplication.class
+com\example\idphotogenerator\service\UploadImage.class
+com\example\idphotogenerator\controller\ImageController$1.class

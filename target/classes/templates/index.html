@@ -17,7 +17,7 @@
                     <a class="navbar-brand" href="#">ID Photo Generator</a>
                 </div>
             </nav>
-
+        
             <!-- Container -->
             <div class="container mt-4">
                 <div class="row g-4">
@@ -37,7 +37,7 @@
                             </div>
                         </div>
                     </div>
-
+        
                     <div class="col-md-4">
                         <div class="tools-column">
                             <div class="card">
@@ -49,9 +49,18 @@
                                     <div class="feature-group">
                                         <h6 class="feature-group-title">Basic Operations</h6>
                                         <div class="mb-4">
+                                            <span>Import from local file</span>
                                             <input type="file" id="fileInput" class="form-control" accept="image/*" />
                                         </div>
-
+        
+                                        <!-- Google Drive Section (Moved Up) -->
+                                        <div class="mb-4">
+                                            <span>Import from Google Drive</span>
+                                            <button id="loadDriveImagesBtn" class="btn btn-secondary mb-2">📂 Load Drive Images</button>
+                                            <select id="driveImageSelect" class="form-select mb-2" style="display: none"></select>
+                                            <button id="previewDriveImageBtn" class="btn btn-info w-100" style="display: none">Preview Selected Image</button>
+                                        </div>
+        
                                         <!-- Photo Specifications  -->
                                         <div class="feature-group">
                                             <span>Photo Specifications (photo aspect)</span>
@@ -63,18 +72,11 @@
                                         </div>
                                         <div class="btn-group-vertical w-100 gap-2" role="group">
                                             <button id="cropBtn" class="btn btn-primary" disabled>Crop Image</button>
+                                            <button id="autoRemoveBackgroundBtn" class="btn btn-info" disabled>Auto Remove Background</button>
                                             <button id="removeBackgroundBtn" class="btn btn-info" disabled>Remove Background</button>
                                         </div>
                                     </div>
-
-                                    <!-- Google Drive Section -->
-                                    <div class="feature-group mt-4">
-                                        <h6 class="feature-group-title">Import from Google Drive</h6>
-                                        <button id="loadDriveImagesBtn" class="btn btn-secondary mb-2">📂 Load Drive Images</button>
-                                        <select id="driveImageSelect" class="form-select mb-2" style="display: none"></select>
-                                        <button id="previewDriveImageBtn" class="btn btn-info w-100" style="display: none">Preview Selected Image</button>
-                                    </div>
-
+        
                                     <!-- Advanced Features -->
                                     <div class="feature-group">
                                         <h6 class="feature-group-title">Advanced Features</h6>
@@ -86,17 +88,17 @@
                                             <i class="fas fa-crosshairs"></i>
                                             Face Centering
                                         </button>
-                                        <button class="btn-feature btn-enhancement" id="enhanceBtn">
+                                        <button class="btn-feature" id="enhanceBtn">
                                             <i class="fas fa-magic"></i>
                                             Photo Enhancement
                                         </button>
-                                        <button class="btn-feature btn-compliance" id="checkBtn">
+                                        <button class="btn-feature" id="checkBtn">
                                             <i class="fas fa-check-circle"></i>
                                             Compliance Checker
                                         </button>
                                         <div id="complianceResult" class="mt-2 text-center small"></div>
                                     </div>
-
+        
                                     <!-- Background Options -->
                                     <div class="feature-group">
                                         <h6 class="feature-group-title">Background Options</h6>
@@ -112,12 +114,7 @@
                                             <button class="color-btn" data-color="#F0FFFF" style="background-color: #f0ffff" title="Azure - General Use"></button>
                                         </div>
                                     </div>
-
-                                    <!-- <div id="backgroundOptions" style="display: none; margin-top: 10px;">
-                                    <p>Select a background color:</p>
-                                </div>
-                                 -->
-
+        
                                     <!-- Final Actions -->
                                     <div class="feature-group">
                                         <h6 class="feature-group-title">Export Layout</h6>
@@ -134,11 +131,11 @@
                                                         <option value="6">6</option>
                                                     </select>
                                                 </div>
-
+        
                                                 <div class="col-auto d-flex align-items-end pb-2">
                                                     <span class="fw-bold">×</span>
                                                 </div>
-
+        
                                                 <div class="col">
                                                     <label for="layout_width" class="form-label">Width</label>
                                                     <select class="form-select" id="layout_width">
@@ -151,7 +148,7 @@
                                                     </select>
                                                 </div>
                                             </div>
-
+        
                                             <div class="d-grid gap-2">
                                                 <button id="exportBtn" class="btn btn-success" disabled><i class="bi bi-download me-2"></i>Export Photo</button>
                                                 <button id="undoBtn" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-counterclockwise me-2"></i>Undo</button>
