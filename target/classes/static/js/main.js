@@ -1189,50 +1189,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    const loadDriveImagesBtn = document.getElementById("loadDriveImagesBtn");
-    const driveImageSelect = document.getElementById("driveImageSelect");
-    const previewDriveImageBtn = document.getElementById("previewDriveImageBtn");
 
-    // 1. Load Google Drive images
-    loadDriveImagesBtn.addEventListener("click", async () => {
-        try {
-            const res = await fetch("/api/drive/images");
-            const files = await res.json();
 
-            driveImageSelect.innerHTML = "";
-            files.forEach((file) => {
-                const option = document.createElement("option");
-                option.value = file.id;
-                option.text = file.name;
-                driveImageSelect.appendChild(option);
-            });
 
-            driveImageSelect.style.display = "block";
-            previewDriveImageBtn.style.display = "block";
-        } catch (err) {
-            alert("Failed to load Google Drive images");
-            console.error(err);
-        }
-    });
-
-    // 2. Preview selected image
-    previewDriveImageBtn.addEventListener("click", async () => {
-        const fileId = driveImageSelect.value;
-        if (!fileId) return;
-
-        try {
-            const res = await fetch(`/api/drive/download/${fileId}`);
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
-
-            image.src = url;
-            image.style.display = "block";
-            placeholder.style.display = "none";
-            enableButtons();
-            saveImageState();
-        } catch (err) {
-            alert("Failed to preview image");
-            console.error(err);
-        }
-    });
 });
