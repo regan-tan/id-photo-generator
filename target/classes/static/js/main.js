@@ -785,8 +785,8 @@ document.addEventListener("DOMContentLoaded", function () {
     exportBtn.addEventListener("click", async function () {
         const canvas = document.createElement("canvas");
         // Add this when initializing the canvas
-        canvas.width = img.width;
-        canvas.height = img.height;
+        canvas.width = image.width;
+        canvas.height = image.height;
 
         const ctx = canvas.getContext("2d");
 
