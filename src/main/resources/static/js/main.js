@@ -502,7 +502,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </div>
     
                 <div class="text-center">
-                    <canvas id="previewCanvas" style="border:1px solid #ddd; max-width: 80%; height: auto; display: inline-block;"></canvas>
+                    <canvas id="previewCanvas" style="border:1px solid #ddd; min-width:60%;max-width: 80%; height: auto; display: inline-block;"></canvas>
                 </div>
             </div>
             <div class="modal-footer d-flex justify-content-between">
