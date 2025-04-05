@@ -29,15 +29,10 @@ import java.util.Map;
 import java.nio.file.Path;
 
 // imports for cloud feature
-import com.example.idphotogenerator.service.UploadImage;
-import com.example.idphotogenerator.service.DownloadFile;
-import com.google.api.services.drive.model.File;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import java.util.HashMap;
 
-import java.io.ByteArrayOutputStream;
+
+
 
 
 
@@ -188,47 +183,11 @@ public ResponseEntity<byte[]> removeBackground(
 
 // cloud feature: list google drive image files
 
-@GetMapping("/api/drive/images")
-@ResponseBody
-public ResponseEntity<List<Map<String, String>>> listGoogleDriveImages() {
-    try {
-        // List<File> files = UploadImage.listImageFiles();
-        List<com.google.api.services.drive.model.File> files = UploadImage.listImageFiles();
 
-        List<Map<String, String>> result = files.stream().map(file -> {
-            Map<String, String> map = new HashMap<>();
-            map.put("id", file.getId());
-            map.put("name", file.getName());
-            return map;
-        }).toList();
-
-        return ResponseEntity.ok(result);
-    } catch (IOException e) {
-        log.error("Failed to fetch images from Google Drive", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
-}
 
 // Download image by fileID
 
-@GetMapping("/api/drive/download/{fileId}")
-@ResponseBody
-public ResponseEntity<byte[]> downloadImageFromDrive(@PathVariable String fileId) {
-    try {
-        ByteArrayOutputStream outputStream = DownloadFile.downloadFile(fileId);
-        byte[] imageBytes = outputStream.toByteArray();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.IMAGE_JPEG); // or detect from MIME type
-        headers.setContentLength(imageBytes.length);
-        headers.set("Content-Disposition", "inline; filename=\"" + fileId + ".jpg\"");
-
-        return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
-    } catch (IOException e) {
-        log.error("Error downloading image from Google Drive", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
-}
 
 }
 
