@@ -609,6 +609,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         // Store a copy of the transparent version
                         originalTransparentImage = result.slice(0);
                         image.src = URL.createObjectURL(result);
+                        saveImageState();
                         // Mark image as having transparent background
                         image.dataset.backgroundRemoved = "true";
                     } else {
