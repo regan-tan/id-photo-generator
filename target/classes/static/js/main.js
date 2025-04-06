@@ -730,16 +730,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Background color selection
   const countryColors = {
-    USA: "#B22234", // Red from USA flag
-    Japan: "#FFFFFF", // White background for Japan
-    France: "#0055A4", // Blue background for France
-    Germany: "#FF0000", // Red from Germany flag
-    Brazil: "#009C3D", // Green from Brazil flag
-    India: "#FF9933", // Saffron color from India flag
-    Italy: "#008C45", // Green from Italy flag
-    Canada: "#FF0000", // Red from Canada flag
-    // Add more countries as needed
-  };
+    "USA": "#FFFFFF",        // White
+    "Japan": "#FFFFFF",      // White
+    "France": "#F5F5F5",     // Off white / light gray
+    "Germany": "#FFFFFF",    // White
+    "Brazil": "#FFFFFF",     // White
+    "India": "#FFFFFF",      // White
+    "Italy": "#FFFFFF",      // White
+    "Canada": "#FFFFFF",     // White
+    "Malaysia": "#87CEEB",   // Light Blue (Sky Blue)
+    "Singapore": "#FFFFFF",  // White
+};
+
 
   // Listen for clicks on the color buttons
   document.querySelectorAll(".color-btn").forEach((btn) => {
