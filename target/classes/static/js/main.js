@@ -639,43 +639,51 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Background color selection
-    document.querySelectorAll(".color-btn").forEach((btn) => {
-        btn.addEventListener("click", async function () {
-            saveImageState();
-            const color = this.dataset.color;
-            const formData = new FormData();
+    let originalTransparentImage = null;  // Store the original transparent image
 
-            // Use the original transparent image if available
-            let sourceImage;
-            if (originalTransparentImage && image.dataset.backgroundRemoved === "true") {
-                sourceImage = originalTransparentImage.slice(0);
-            } else {
-                sourceImage = await fetch(image.src).then((r) => r.blob());
-            }
+// Fetch the image and store it as the original transparent image if not already done
+if (!originalTransparentImage) {
+    fetch(image.src)
+        .then((response) => response.blob())
+        .then((blob) => {
+            originalTransparentImage = blob;
+        })
+        .catch((error) => console.error("Error fetching the original image:", error));
+}
 
-            const blob = await fetch(image.src).then((r) => r.blob());
-            formData.append("image", blob);
-            formData.append("backgroundColor", color);
+document.querySelectorAll(".color-btn").forEach((btn) => {
+    btn.addEventListener("click", function () {
+        saveImageState();  // Assuming this function saves the image state for undo/redo or other reasons
+        const color = this.dataset.color;
+        const formData = new FormData();
 
-            try {
-                const response = await fetch("/api/change-background", {
-                    method: "POST",
-                    body: formData,
-                });
+        // Use the original transparent image for each background change
+        let sourceImage = originalTransparentImage.slice(0);  // Create a copy to send each time
 
-                if (response.ok) {
-                    const result = await response.blob();
-                    image.src = URL.createObjectURL(result);
-                    // Mark image as not having transparent background
-                    image.dataset.backgroundRemoved = "false";
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                alert("An error occurred while changing the background color.");
-            }
+        formData.append("image", sourceImage);
+        formData.append("backgroundColor", color);
+
+        // Send the request to the server to change the background
+        fetch("/api/change-background", {
+            method: "POST",
+            body: formData,
+        })
+        .then((response) => response.blob())
+        .then((result) => {
+            // Update the image source with the result
+            image.src = URL.createObjectURL(result);
+
+            // Mark the image as not having a transparent background after applying the background color
+            image.dataset.backgroundRemoved = "false";
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while changing the background color.");
         });
     });
+});
 
+    
     // Clothes Replacement Modal
     clothesBtn.addEventListener("click", function () {
         clothesImage.src = image.src;

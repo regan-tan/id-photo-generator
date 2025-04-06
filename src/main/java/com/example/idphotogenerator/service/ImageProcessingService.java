@@ -147,57 +147,57 @@ public class ImageProcessingService {
     }
 
     public byte[] changeBackground(byte[] imageData, String backgroundColor) throws IOException {
-        // First remove the background
-        byte[] transparentImage = imageData;
-
         // Convert the color string to RGB values
         Color color = Color.decode(backgroundColor);
-
-        // Create a new image with the specified background color
-        BufferedImage original = ImageIO.read(new ByteArrayInputStream(transparentImage));
-        BufferedImage result = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_RGB);
-
-        // Fill the background with the specified color
+    
+        // Read the original image from byte array
+        BufferedImage original = ImageIO.read(new ByteArrayInputStream(imageData));
+    
+        // Create a new BufferedImage with the same width, height and ARGB type (supports alpha)
+        BufferedImage result = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_ARGB);
+    
+        // First, fill the result image with the background color
         for (int x = 0; x < result.getWidth(); x++) {
             for (int y = 0; y < result.getHeight(); y++) {
                 result.setRGB(x, y, color.getRGB());
             }
         }
-
-        // Copy the foreground from the original image
+    
+        // Copy the foreground from the original image (preserving transparency)
         for (int x = 0; x < original.getWidth(); x++) {
             for (int y = 0; y < original.getHeight(); y++) {
                 int pixel = original.getRGB(x, y);
-
-                // // For non transparent
-                // if ((pixel >> 24) != 0) {
-                // result.setRGB(x, y, pixel);
-                // }
-                // Alpha bleding to remove Fringing
                 int alpha = (pixel >> 24) & 0xFF; // Extract alpha channel (0-255)
-                int fgRed = (pixel >> 16) & 0xFF;
-                int fgGreen = (pixel >> 8) & 0xFF;
-                int fgBlue = pixel & 0xFF;
-
-                // Blend with the background using alpha
-                int bgRed = color.getRed();
-                int bgGreen = color.getGreen();
-                int bgBlue = color.getBlue();
-
-                int finalRed = (fgRed * alpha + bgRed * (255 - alpha)) / 255;
-                int finalGreen = (fgGreen * alpha + bgGreen * (255 - alpha)) / 255;
-                int finalBlue = (fgBlue * alpha + bgBlue * (255 - alpha)) / 255;
-
-                int blendedPixel = (255 << 24) | (finalRed << 16) | (finalGreen << 8) | finalBlue;
-                result.setRGB(x, y, blendedPixel);
+    
+                // Only modify non-transparent pixels
+                if (alpha != 0) {
+                    // Extract RGB values of the foreground pixel
+                    int fgRed = (pixel >> 16) & 0xFF;
+                    int fgGreen = (pixel >> 8) & 0xFF;
+                    int fgBlue = pixel & 0xFF;
+    
+                    // Blend with the background using the alpha value
+                    int bgRed = color.getRed();
+                    int bgGreen = color.getGreen();
+                    int bgBlue = color.getBlue();
+    
+                    int finalRed = (fgRed * alpha + bgRed * (255 - alpha)) / 255;
+                    int finalGreen = (fgGreen * alpha + bgGreen * (255 - alpha)) / 255;
+                    int finalBlue = (fgBlue * alpha + bgBlue * (255 - alpha)) / 255;
+    
+                    // Set the blended pixel to the result image
+                    int blendedPixel = (255 << 24) | (finalRed << 16) | (finalGreen << 8) | finalBlue;
+                    result.setRGB(x, y, blendedPixel);
+                }
             }
         }
-
-        // Convert the result back to bytes
+    
+        // Convert the result back to bytes (PNG format to maintain transparency)
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(result, "png", baos);
         return baos.toByteArray();
     }
+    
 
     private Mat bytesToMat(byte[] imageData) throws IOException {
         // Convert byte array to BufferedImage
