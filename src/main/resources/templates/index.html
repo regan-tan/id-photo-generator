@@ -7,6 +7,8 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
         <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
         <link href="/css/main.css" rel="stylesheet" />
+
+        
     </head>
 
     <body>
@@ -109,47 +111,100 @@
                                             <button class="color-btn" data-color="#F0FFFF" style="background-color: #f0ffff" title="Azure - General Use"></button>
                                         </div>
                                     </div>
+                                    <select id="country-select" class="form-select">
+                                        <option value="">Select Country</option>
+                                        <option value="#FFFFFF" data-country="USA">USA (White)</option>
+                                        <option value="#FFFFFF" data-country="Japan">Japan (White)</option>
+                                        <option value="#F5F5F5" data-country="France">France (Off White)</option>
+                                        <option value="#87CEEB" data-country="Malaysia">Malaysia (Light Blue)</option>
+                                        <option value="#FFFFFF" data-country="Singapore">Singapore (White)</option>
+                                        <!-- Add more options here -->
+                                    </select>
+                                    
+                                    
         
                                     <!-- Final Actions -->
                                     <div class="feature-group">
-                                        <h6 class="feature-group-title">Export Layout</h6>
+                                        <h6 class="feature-group-title">Export Passport/ID Photo</h6>
                                         <div class="card-body">
-                                            <div class="row mb-3 align-items-end">
+                                            <!-- Layout Selection Section -->
+                                            <div class="row mb-3">
                                                 <div class="col">
-                                                    <label for="layout_height" class="form-label">Height</label>
-                                                    <select class="form-select" id="layout_height">
-                                                        <option value="1">1</option>
-                                                        <option value="2">2</option>
-                                                        <option value="3">3</option>
-                                                        <option value="4">4</option>
-                                                        <option value="5">5</option>
-                                                        <option value="6">6</option>
-                                                    </select>
-                                                </div>
-        
-                                                <div class="col-auto d-flex align-items-end pb-2">
-                                                    <span class="fw-bold">×</span>
-                                                </div>
-        
-                                                <div class="col">
-                                                    <label for="layout_width" class="form-label">Width</label>
-                                                    <select class="form-select" id="layout_width">
-                                                        <option value="1">1</option>
-                                                        <option value="2">2</option>
-                                                        <option value="3">3</option>
-                                                        <option value="4">4</option>
-                                                        <option value="5">5</option>
-                                                        <option value="6">6</option>
+                                                    <label for="photo_layout" class="form-label">Photo Layout</label>
+                                                    <select class="form-select" id="photo_layout">
+                                                        <option value="grid">Grid</option>
+                                                        <option value="single">Single Photo</option>
                                                     </select>
                                                 </div>
                                             </div>
-        
+                                            
+                                            <div class="row mb-3 align-items-end">
+                                                <div class="col">
+                                                    <label for="layout_height" class="form-label">Height (in cm)</label>
+                                                    <select class="form-select" id="layout_height">
+                                                        <option value="5">5</option>
+                                                        <option value="5.5">5.5</option>
+                                                        <option value="6">6</option>
+                                                        <option value="7">7</option>
+                                                        <option value="7.5">7.5</option>
+                                                    </select>
+                                                </div>
+                                    
+                                                <div class="col-auto d-flex align-items-end pb-2">
+                                                    <span class="fw-bold">×</span>
+                                                </div>
+                                    
+                                                <div class="col">
+                                                    <label for="layout_width" class="form-label">Width (in cm)</label>
+                                                    <select class="form-select" id="layout_width">
+                                                        <option value="3.5">3.5</option>
+                                                        <option value="4">4</option>
+                                                        <option value="4.5">4.5</option>
+                                                        <option value="5">5</option>
+                                                        <option value="5.5">5.5</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                    
+                                            <!-- Output Format & Resolution Section -->
+                                            <div class="row mb-3">
+                                                <div class="col">
+                                                    <label for="output_format" class="form-label">Output Format</label>
+                                                    <select class="form-select" id="output_format">
+                                                        <option value="jpeg">JPEG</option>
+                                                        <option value="png">PNG</option>
+                                                        <option value="bmp">BMP</option>
+                                                    </select>
+                                                </div>
+                                    
+                                                <div class="col">
+                                                    <label for="output_resolution" class="form-label">Resolution (DPI)</label>
+                                                    <select class="form-select" id="output_resolution">
+                                                        <option value="300">300 DPI</option>
+                                                        <option value="600">600 DPI</option>
+                                                        <option value="1200">1200 DPI</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                    
+                                            <!-- File Naming and Folder Selection -->
+                                            <div class="row mb-3">
+                                                <div class="col">
+                                                    <label for="file_name" class="form-label">File Name</label>
+                                                    <input type="text" id="file_name" class="form-control" placeholder="Enter file name" />
+                                                </div>
+                                    
+                                               
+                                            </div>
+                                    
+                                            <!-- Action Buttons -->
                                             <div class="d-grid gap-2">
                                                 <button id="exportBtn" class="btn btn-success" disabled><i class="bi bi-download me-2"></i>Export Photo</button>
                                                 <button id="undoBtn" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-counterclockwise me-2"></i>Undo</button>
                                             </div>
                                         </div>
                                     </div>
+                                    
                                 </div>
                             </div>
                         </div>

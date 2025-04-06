@@ -639,42 +639,63 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Background color selection
-    document.querySelectorAll(".color-btn").forEach((btn) => {
-        btn.addEventListener("click", async function () {
-            saveImageState();
-            const color = this.dataset.color;
-            const formData = new FormData();
+    // Background color selection
+const countryColors = {
+    "USA": "#FFFFFF",        // White
+    "Japan": "#FFFFFF",      // White
+    "France": "#F5F5F5",     // Off white / light gray
+    "Germany": "#FFFFFF",    // White
+    "Brazil": "#FFFFFF",     // White
+    "India": "#FFFFFF",      // White
+    "Italy": "#FFFFFF",      // White
+    "Canada": "#FFFFFF",     // White
+    "Malaysia": "#87CEEB",   // Light Blue (Sky Blue)
+    "Singapore": "#FFFFFF",  // White
+};
 
-            // Use the original transparent image if available
-            let sourceImage;
-            if (originalTransparentImage && image.dataset.backgroundRemoved === "true") {
-                sourceImage = originalTransparentImage.slice(0);
-            } else {
-                sourceImage = await fetch(image.src).then((r) => r.blob());
-            }
-
-            const blob = await fetch(image.src).then((r) => r.blob());
-            formData.append("image", blob);
-            formData.append("backgroundColor", color);
-
-            try {
-                const response = await fetch("/api/change-background", {
-                    method: "POST",
-                    body: formData,
-                });
-
-                if (response.ok) {
-                    const result = await response.blob();
-                    image.src = URL.createObjectURL(result);
-                    // Mark image as not having transparent background
-                    image.dataset.backgroundRemoved = "false";
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                alert("An error occurred while changing the background color.");
-            }
-        });
+// Listen for clicks on the color buttons
+document.querySelectorAll(".color-btn").forEach((btn) => {
+    btn.addEventListener("click", function () {
+        const color = this.dataset.color;
+        applyBackgroundColor(color);
     });
+});
+
+// Listen for country selection (dropdown)
+document.getElementById("country-select").addEventListener("change", function () {
+    const selectedColor = this.value;  // Get the color directly from the value
+    if (selectedColor) {
+        applyBackgroundColor(selectedColor);
+    }
+});
+
+function applyBackgroundColor(color) {
+    saveImageState();  // Assuming this function saves the image state for undo/redo or other reasons
+
+    const formData = new FormData();
+    let sourceImage = originalTransparentImage.slice(0);  // Create a copy to send each time
+
+    formData.append("image", sourceImage);
+    formData.append("backgroundColor", color);
+
+    // Send the request to the server to change the background
+    fetch("/api/change-background", {
+        method: "POST",
+        body: formData,
+    })
+    .then((response) => response.blob())
+    .then((result) => {
+        // Update the image source with the result
+        image.src = URL.createObjectURL(result);
+
+        // Mark the image as not having a transparent background after applying the background color
+        image.dataset.backgroundRemoved = "false";
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred while changing the background color.");
+    });
+}
 
     // Clothes Replacement Modal
     clothesBtn.addEventListener("click", function () {
@@ -785,44 +806,62 @@ document.addEventListener("DOMContentLoaded", function () {
     // Export functionality
     exportBtn.addEventListener("click", async function () {
         const canvas = document.createElement("canvas");
-        // Add this when initializing the canvas
-        canvas.width = image.width;
-        canvas.height = image.height;
-
-        const ctx = canvas.getContext("2d");
-
+        const layoutHeight = parseFloat(document.getElementById("layout_height").value);
+        const layoutWidth = parseFloat(document.getElementById("layout_width").value);
+        const outputFormat = document.getElementById("output_format").value;
+        const outputResolution = parseInt(document.getElementById("output_resolution").value);
+        const fileName = document.getElementById("file_name").value || "id-photo";  // Default file name if none provided
+        const photoLayout = document.getElementById("photo_layout").value;  // Get selected layout type
+        
         // Get the original image
         const imageObj = new Image();
-        imageObj.src = image.src;
-
+        imageObj.src = image.src;  // Ensure the image is being referenced correctly
+    
         // Wait for the image to load
         imageObj.onload = function () {
             const imgWidth = imageObj.width;
             const imgHeight = imageObj.height;
-            console.log(layout_heightValue, layout_widthValue);
-            // Set canvas size for a 4x2 grid (4 columns, 2 rows)
-            canvas.width = imgWidth * layout_widthValue; // 4 images in a row
-            canvas.height = imgHeight * layout_heightValue; // 2 images in a column
-
-            // Draw the original image 8 times (4x2 grid)
-
-            for (let i = 0; i < layout_heightValue; i++) {
-                for (let j = 0; j < layout_widthValue; j++) {
-                    ctx.drawImage(imageObj, j * imgWidth, i * imgHeight, imgWidth, imgHeight);
+    
+            if (photoLayout === "single") {
+                // Single photo layout logic
+                canvas.width = imgWidth;
+                canvas.height = imgHeight;
+            } else {
+                // Grid layout logic
+                canvas.width = imgWidth * layoutWidth;
+                canvas.height = imgHeight * layoutHeight;
+                const scaleFactor = outputResolution / 300;  // Assuming 300 DPI is the base resolution
+                canvas.width *= scaleFactor;
+                canvas.height *= scaleFactor;
+            }
+    
+            const ctx = canvas.getContext("2d");
+    
+            if (photoLayout === "single") {
+                // Draw a single image on the canvas
+                ctx.drawImage(imageObj, 0, 0, imgWidth, imgHeight);
+            } else {
+                // Draw the image in a grid layout
+                for (let i = 0; i < layoutHeight; i++) {
+                    for (let j = 0; j < layoutWidth; j++) {
+                        ctx.drawImage(imageObj, j * imgWidth, i * imgHeight, imgWidth, imgHeight);
+                    }
                 }
             }
-
+    
+            // Export the image to Blob and download it
             canvas.toBlob(async function (blob) {
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
-                link.download = "id-photo.png";
+                link.download = `${fileName}.${outputFormat}`;  // Use the provided or default file name with the selected format
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-            });
+            }, `image/${outputFormat}`, 1.0);  // Specify output format
         };
     });
-
+    
+    
     // Variables for image enhancement
     let originalImageForEnhancement = null;
     let hasTransparentBackground = false;
