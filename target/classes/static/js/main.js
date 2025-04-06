@@ -727,6 +727,56 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   });
+//check if bg removed first
+document.addEventListener("DOMContentLoaded", function () {
+  const colorButtons = document.querySelectorAll(".color-btn");
+  const countrySelect = document.getElementById("country-select");
+  const image = document.getElementById("image");
+
+  // Initially disable background options
+  colorButtons.forEach(btn => btn.disabled = true);
+  countrySelect.disabled = true;
+
+  // Function to enable bg options once background is removed
+  function enableBackgroundOptions() {
+      colorButtons.forEach(btn => btn.disabled = false);
+      countrySelect.disabled = false;
+  }
+
+  // Simulated background removal hook
+  document.getElementById("removeBackgroundBtn").addEventListener("click", function () {
+      // Do your actual background removal logic here...
+      // After it's done:
+      image.dataset.backgroundRemoved = "true"; // Mark as removed
+      enableBackgroundOptions();               // Enable color selection
+  });
+
+  // Handle color button click
+  colorButtons.forEach(btn => {
+      btn.addEventListener("click", function () {
+          if (image.dataset.backgroundRemoved !== "true") {
+              alert("Please remove the background first.");
+              return;
+          }
+          const color = btn.getAttribute("data-color");
+          image.style.backgroundColor = color;
+      });
+  });
+
+  // Handle country dropdown change
+  countrySelect.addEventListener("change", function () {
+      if (image.dataset.backgroundRemoved !== "true") {
+          alert("Please remove the background first.");
+          this.value = ""; // reset
+          return;
+      }
+
+      const selectedColor = this.value;
+      if (selectedColor) {
+          image.style.backgroundColor = selectedColor;
+      }
+  });
+});
 
   // Background color selection
   const countryColors = {
@@ -760,43 +810,44 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  document
-    .getElementById("country-select")
-    .addEventListener("change", function () {
-      const country = this.value;
-      if (country) {
-        const countryColor = countryColors[country]; // Get color from the map
-        applyBackgroundColor(countryColor);
-      }
-    });
+  document.getElementById("country-select").addEventListener("change", function () {
+    const selectedCountry = this.options[this.selectedIndex].dataset.country;
+    const color = this.value;
 
-  function applyBackgroundColor(color) {
-    saveImageState(); // Assuming this function saves the image state for undo/redo or other reasons
+    if (selectedCountry && color) {
+        applyBackgroundColor(color);
+    }
+});
 
-    const formData = new FormData();
-    let sourceImage = originalTransparentImage.slice(0); // Create a copy to send each time
 
-    formData.append("image", sourceImage);
-    formData.append("backgroundColor", color);
+async function applyBackgroundColor(color) {
+  saveImageState(); // Assuming this handles undo/redo
 
-    // Send the request to the server to change the background
-    fetch("/api/change-background", {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => response.blob())
-      .then((result) => {
-        // Update the image source with the result
-        image.src = URL.createObjectURL(result);
+  const formData = new FormData();
+  const sourceImage = originalTransparentImage.slice(0); // fresh copy each time
 
-        // Mark the image as not having a transparent background after applying the background color
-        image.dataset.backgroundRemoved = "false";
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        alert("An error occurred while changing the background color.");
+  formData.append("image", sourceImage);
+  formData.append("backgroundColor", color);
+
+  try {
+      const response = await fetch("/api/change-background", {
+          method: "POST",
+          body: formData,
       });
+
+      if (response.ok) {
+          const result = await response.blob();
+          image.src = URL.createObjectURL(result);
+          image.dataset.backgroundRemoved = "false";
+      } else {
+          console.error("Failed response:", await response.text());
+          alert("Server error while changing background.");
+      }
+  } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred while changing the background.");
   }
+}
 
   // Clothes Replacement Modal
   clothesBtn.addEventListener("click", function () {
