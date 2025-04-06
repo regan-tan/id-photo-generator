@@ -1,6 +1,12 @@
 /Users/yiluan/Documents/GitHub/id-photo-generator/src/main/java/com/example/idphotogenerator/service/ClothesReplacementService.java
-/Users/yiluan/Documents/GitHub/id-photo-generator/src/main/java/com/example/idphotogenerator/controller/ImageController.java
+/Users/yiluan/Documents/GitHub/id-photo-generator/src/main/java/com/example/idphotogenerator/service_alt/BackgroundRemoval.java
 /Users/yiluan/Documents/GitHub/id-photo-generator/src/main/java/com/example/idphotogenerator/IdPhotoGeneratorApplication.java
+/Users/yiluan/Documents/GitHub/id-photo-generator/src/main/java/com/example/idphotogenerator/service_alt/PhotoEnhancement.java
 /Users/yiluan/Documents/GitHub/id-photo-generator/src/main/java/com/example/idphotogenerator/service/ComplianceCheckerService.java
 /Users/yiluan/Documents/GitHub/id-photo-generator/src/main/java/com/example/idphotogenerator/service/ImageProcessingService.java
+/Users/yiluan/Documents/GitHub/id-photo-generator/src/main/java/com/example/idphotogenerator/service_alt/ComplianceChecker.java
+/Users/yiluan/Documents/GitHub/id-photo-generator/src/main/java/com/example/idphotogenerator/service_alt/ImageProcessor.java
+/Users/yiluan/Documents/GitHub/id-photo-generator/src/main/java/com/example/idphotogenerator/service_alt/ClothesReplacement.java
+/Users/yiluan/Documents/GitHub/id-photo-generator/src/main/java/com/example/idphotogenerator/service_alt/ChangeBackground.java
+/Users/yiluan/Documents/GitHub/id-photo-generator/src/main/java/com/example/idphotogenerator/controller/ImageController_alt.java
 /Users/yiluan/Documents/GitHub/id-photo-generator/src/main/java/com/example/idphotogenerator/service/PhotoEnhancementService.java
