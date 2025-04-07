@@ -1,6 +1,5 @@
 package com.example.idphotogenerator.service;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,6 +26,10 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import nu.pattern.OpenCV;
+import java.awt.*;
+import java.awt.image.*;
+import javax.imageio.ImageIO;
+import java.io.*;
 
 @Service
 public class ImageProcessingService {
@@ -146,57 +149,84 @@ public class ImageProcessingService {
         return matToBytes(rgba);
     }
 
-    public byte[] changeBackground(byte[] imageData, String backgroundColor) throws IOException {
-        // Convert the color string to RGB values
-        Color color = Color.decode(backgroundColor);
-    
+    public byte[] changeBackground(byte[] imageData, String backgroundColor, byte[] backgroundImageData) throws IOException {
         // Read the original image from byte array
         BufferedImage original = ImageIO.read(new ByteArrayInputStream(imageData));
-    
-        // Create a new BufferedImage with the same width, height and ARGB type (supports alpha)
-        BufferedImage result = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_ARGB);
-    
-        // First, fill the result image with the background color
-        for (int x = 0; x < result.getWidth(); x++) {
-            for (int y = 0; y < result.getHeight(); y++) {
-                result.setRGB(x, y, color.getRGB());
+        
+        BufferedImage background;
+        
+        if (backgroundImageData != null) {
+            // If a custom background image is provided, use it
+            background = ImageIO.read(new ByteArrayInputStream(backgroundImageData));
+            
+            // Resize the background image to match the original image size
+            Image scaledBackground = background.getScaledInstance(original.getWidth(), original.getHeight(), Image.SCALE_SMOOTH);
+            background = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            
+            // Draw the scaled background image
+            Graphics2D g2d = background.createGraphics();
+            g2d.drawImage(scaledBackground, 0, 0, null);
+            g2d.dispose();
+            
+        } else if (backgroundColor != null) {
+            // If no background image, use the provided background color
+            Color color = Color.decode(backgroundColor);
+            background = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            
+            // Fill the background with the color
+            for (int x = 0; x < background.getWidth(); x++) {
+                for (int y = 0; y < background.getHeight(); y++) {
+                    background.setRGB(x, y, color.getRGB());
+                }
             }
+            
+        } else {
+            // Default to transparent background if no image or color is provided
+            background = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_ARGB);
         }
-    
-        // Copy the foreground from the original image (preserving transparency)
+        
+        // Create a new BufferedImage to hold the result
+        BufferedImage result = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        
+        // Blend the images (foreground and background)
         for (int x = 0; x < original.getWidth(); x++) {
             for (int y = 0; y < original.getHeight(); y++) {
-                int pixel = original.getRGB(x, y);
-                int alpha = (pixel >> 24) & 0xFF; // Extract alpha channel (0-255)
-    
-                // Only modify non-transparent pixels
-                if (alpha != 0) {
-                    // Extract RGB values of the foreground pixel
-                    int fgRed = (pixel >> 16) & 0xFF;
-                    int fgGreen = (pixel >> 8) & 0xFF;
-                    int fgBlue = pixel & 0xFF;
-    
-                    // Blend with the background using the alpha value
-                    int bgRed = color.getRed();
-                    int bgGreen = color.getGreen();
-                    int bgBlue = color.getBlue();
-    
+                int pixelOriginal = original.getRGB(x, y);
+                int alpha = (pixelOriginal >> 24) & 0xFF; // Extract alpha channel (0-255)
+                
+                if (alpha != 0) { // Only modify non-transparent pixels
+                    // Extract RGB values of the foreground (original image)
+                    int fgRed = (pixelOriginal >> 16) & 0xFF;
+                    int fgGreen = (pixelOriginal >> 8) & 0xFF;
+                    int fgBlue = pixelOriginal & 0xFF;
+                    
+                    // Get the background pixel color
+                    int pixelBackground = background.getRGB(x, y);
+                    int bgRed = (pixelBackground >> 16) & 0xFF;
+                    int bgGreen = (pixelBackground >> 8) & 0xFF;
+                    int bgBlue = pixelBackground & 0xFF;
+                    
+                    // Blend the foreground and background based on alpha
                     int finalRed = (fgRed * alpha + bgRed * (255 - alpha)) / 255;
                     int finalGreen = (fgGreen * alpha + bgGreen * (255 - alpha)) / 255;
                     int finalBlue = (fgBlue * alpha + bgBlue * (255 - alpha)) / 255;
-    
+                    
                     // Set the blended pixel to the result image
                     int blendedPixel = (255 << 24) | (finalRed << 16) | (finalGreen << 8) | finalBlue;
                     result.setRGB(x, y, blendedPixel);
+                } else {
+                    // If pixel is transparent, keep the background
+                    result.setRGB(x, y, background.getRGB(x, y));
                 }
             }
         }
-    
+        
         // Convert the result back to bytes (PNG format to maintain transparency)
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(result, "png", baos);
         return baos.toByteArray();
     }
+    
     
 
     private Mat bytesToMat(byte[] imageData) throws IOException {

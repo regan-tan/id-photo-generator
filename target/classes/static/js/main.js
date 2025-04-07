@@ -638,8 +638,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // Background color selection
-    // Background color selection
+   // Background color selection
 const countryColors = {
     "USA": "#FFFFFF",        // White
     "Japan": "#FFFFFF",      // White
@@ -653,48 +652,166 @@ const countryColors = {
     "Singapore": "#FFFFFF",  // White
 };
 
-// Listen for clicks on the color buttons
+// Handle background color button clicks
 document.querySelectorAll(".color-btn").forEach((btn) => {
     btn.addEventListener("click", function () {
         const color = this.dataset.color;
-        applyBackgroundColor(color);
+        applyBackground(color);  // Pass the color to apply the background
     });
 });
 
-// Listen for country selection (dropdown)
+// Handle country selection from dropdown
 document.getElementById("country-select").addEventListener("change", function () {
-    const selectedColor = this.value;  // Get the color directly from the value
+    const selectedColor = this.value;
     if (selectedColor) {
-        applyBackgroundColor(selectedColor);
+        applyBackground(selectedColor);  // Apply background based on selected color
     }
 });
 
-function applyBackgroundColor(color) {
-    saveImageState();  // Assuming this function saves the image state for undo/redo or other reasons
+document.getElementById("backgroundImageInput").addEventListener("change", function (event) {
+    const file = event.target.files[0];
+    console.log("Selected file:", file); // Log the selected file
 
-    const formData = new FormData();
+    if (file) {
+        // Ensure that the file is a valid image type (jpeg, png, etc.)
+        const validTypes = ["image/jpeg", "image/png"];
+        if (validTypes.includes(file.type)) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const backgroundImage = new Image();
+                backgroundImage.src = e.target.result;
+                backgroundImage.onload = function () {
+                    // Apply the background image after it is loaded
+                    applyBackgroundImage(backgroundImage, file);
+                };
+            };
+            reader.readAsDataURL(file);
+        } else {
+            alert("Please upload a valid image (JPEG or PNG).");
+        }
+    }
+});
+
+// Apply the custom background image
+function applyBackgroundImage(backgroundImage, file) {
+    saveImageState();  // Assuming this function saves the image state
+
+    const formData = new FormData();  // Initialize FormData here
     let sourceImage = originalTransparentImage.slice(0);  // Create a copy to send each time
 
+    // Append the original image to the formData
     formData.append("image", sourceImage);
-    formData.append("backgroundColor", color);
 
-    // Send the request to the server to change the background
+    // Append the background image file (JPEG or PNG)
+    formData.append("backgroundImage", file);
+    
+    // Log FormData contents to verify
+    console.log("FormData before sending:");
+    formData.forEach((value, key) => {
+        console.log(key, value);
+    });
+
+    // Send the data to the backend
     fetch("/api/change-background", {
         method: "POST",
         body: formData,
     })
     .then((response) => response.blob())
     .then((result) => {
-        // Update the image source with the result
         image.src = URL.createObjectURL(result);
+        image.dataset.backgroundRemoved = "false";
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred while changing the background image.");
+    });
 
-        // Mark the image as not having a transparent background after applying the background color
+    // Show the reset button when a custom background image is applied
+    document.getElementById("resetBackgroundBtn").style.display = "block";
+}
+
+// Handle reset background button click
+document.getElementById("resetBackgroundBtn").addEventListener("click", function () {
+    resetBackground();
+});
+
+// Function to reset the background to a default state
+function resetBackground() {
+    // Reset to default behavior (e.g., white or transparent background)
+    applyBackground("#FFFFFF");  // Assuming white is the default background color
+
+    // Hide the reset button again
+    document.getElementById("resetBackgroundBtn").style.display = "none";
+}
+
+// Apply background color if needed
+function applyBackground(color) {
+    saveImageState();  // Assuming this function saves the image state
+
+    const formData = new FormData();
+    let sourceImage = originalTransparentImage.slice(0);  // Create a copy to send each time
+
+    // Add color as background data
+    formData.append("image", sourceImage);
+    formData.append("backgroundColor", color);  // Send the color if available
+
+    fetch("/api/change-background", {
+        method: "POST",
+        body: formData,
+    })
+    .then((response) => response.blob())
+    .then((result) => {
+        image.src = URL.createObjectURL(result);
+        image.dataset.backgroundRemoved = "false";  // Optional, depending on your setup
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred while changing the background color.");
+    });
+}
+
+
+function applyBackground(color) {
+    saveImageState();  // Assuming this function saves the image state
+
+    const formData = new FormData();
+    let sourceImage = originalTransparentImage.slice(0);  // Create a copy to send each time
+
+    // Add color as background data
+    formData.append("image", sourceImage);
+    formData.append("backgroundColor", color);  // Send the color if available
+
+    fetch("/api/change-background", {
+        method: "POST",
+        body: formData,
+    })
+    .then((response) => response.blob())
+    .then((result) => {
+        image.src = URL.createObjectURL(result);
         image.dataset.backgroundRemoved = "false";
     })
     .catch((error) => {
         console.error("Error:", error);
         alert("An error occurred while changing the background color.");
     });
+}
+
+function resetBackground() {
+    // Reset to default behavior (e.g., white or transparent background)
+    applyBackground("#FFFFFF");  // Assuming white is the default background color
+
+    // Hide the reset button again
+    document.getElementById("resetBackgroundBtn").style.display = "none";
+}
+
+
+
+function resetBackground() {
+    // Reset to default behavior (e.g., white or transparent background)
+    applyBackground("#FFFFFF");  // Assuming white is the default background color
+
+    // Hide the reset button again
+    document.getElementById("resetBackgroundBtn").style.display = "none";
 }
 
     // Clothes Replacement Modal
