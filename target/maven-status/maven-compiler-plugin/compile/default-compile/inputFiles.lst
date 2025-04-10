@@ -1,12 +1,13 @@
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service\ComplianceCheckerService.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service\ImageProcessingService.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service\ClothesReplacementService.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service_alt\ComplianceChecker.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service_alt\BackgroundRemoval.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\controller\ImageController_alt.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service_alt\ImageProcessor.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service\PhotoEnhancementService.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service_alt\ChangeBackground.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service_alt\PhotoEnhancement.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\IdPhotoGeneratorApplication.java
-C:\wamp64\www\IS442 Project\id-photo-generator\src\main\java\com\example\idphotogenerator\service_alt\ClothesReplacement.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service/PhotoEnhancementService.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service_alt/ImageProcessor.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service_alt/ChangeBackground.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/controller/ImageController_alt.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service_alt/BackgroundRemoval.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service/ClothesReplacementService.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service/ImageProcessingService.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service_alt/PhotoEnhancement.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service_alt/ComplianceChecker.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service/ComplianceCheckerService.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service/BatchProcessingService.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/service_alt/ClothesReplacement.java
+/Users/jonathanong/id-photo-generator/src/main/java/com/example/idphotogenerator/IdPhotoGeneratorApplication.java

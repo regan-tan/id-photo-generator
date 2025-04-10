@@ -282,6 +282,133 @@ body {
     background-color: #f1f5f9;
 }
 
+.highlight-section {
+    animation: highlight-pulse 1.5s ease-in-out;
+}
+
+/* Add sticky batch processing container styles */
+
+.batch-processing-sticky {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    padding: 0 1rem;
+    max-width: 100%;
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid #dee2e6;
+    transition: transform 0.3s ease-in-out;
+}
+
+.batch-processing-sticky .card {
+    margin-bottom: 0;
+    border-radius: 0.5rem 0.5rem 0 0;
+    border-bottom: none;
+}
+
+.batch-processing-sticky.collapsed {
+    transform: translateY(calc(100% - 70px));
+}
+
+.batch-processing-sticky.collapsed:hover {
+    transform: translateY(calc(100% - 80px));
+}
+
+.batch-processing-toggle {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 20px;
+    padding: 2px 15px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    color: #6c757d;
+    z-index: 1031;
+}
+
+.batch-processing-toggle:hover {
+    background-color: #f8f9fa;
+}
+
+/* Add padding to the bottom of the page to prevent content from being hidden behind the sticky card */
+body {
+    padding-bottom: 70px;
+}
+
+/* Make sure the expanded card has a maximum height and scrolls if needed */
+#batchProcessingExpanded {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+@keyframes highlight-pulse {
+    0% { background-color: transparent; }
+    30% { background-color: rgba(13, 110, 253, 0.1); }  /* Light blue highlight */
+    100% { background-color: transparent; }
+}
+
+/* Add these styles for the file selection UI */
+
+.selected-files-container {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+    background-color: white;
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.file-item:last-child {
+    margin-bottom: 0;
+}
+
+.file-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 85%;
+    font-size: 0.875rem;
+}
+
+.remove-file {
+    cursor: pointer;
+    color: #dc3545;
+    font-weight: bold;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+}
+
+.remove-file:hover {
+    background-color: #ffeeee;
+}
+
+.file-count-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    border-top: 1px dashed #dee2e6;
+    font-size: 0.875rem;
+}
+
 @media (max-width: 1200px) {
     .image-container {
         max-width: 450px;

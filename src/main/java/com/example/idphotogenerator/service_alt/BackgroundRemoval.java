@@ -1,6 +1,5 @@
 package com.example.idphotogenerator.service_alt;
 
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,28 +7,31 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-
-
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-
+import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-
-
-public class BackgroundRemoval extends ImageProcessor{
+public class BackgroundRemoval extends ImageProcessor {
     private Map<String, List<Double>> rectangles_dim;
-    public BackgroundRemoval(byte[] imageData, Map<String, List<Double>> rectangles_dim){
+
+    public BackgroundRemoval(byte[] imageData, Map<String, List<Double>> rectangles_dim) {
         super(imageData);
         this.rectangles_dim = rectangles_dim;
     }
-    public byte[] removeBackground() throws IOException{
+
+    public byte[] removeBackground() throws IOException {
+        // Add this check at the beginning of the method
+        if (rectangles_dim == null) {
+            // Use automated background removal instead
+            return removeBackgroundAutomatically();
+        }
         // Convert byte array to Mat
         Mat image = bytesToMat(imageData);
 
@@ -94,7 +96,6 @@ public class BackgroundRemoval extends ImageProcessor{
             throw new IllegalArgumentException("Image dimensions must be non-zero.");
         }
 
-
         Mat result = removal_func(resized, mask, bgModel, fgModel, source);
 
         // If we resized earlier, resize back to original size
@@ -133,11 +134,6 @@ public class BackgroundRemoval extends ImageProcessor{
 
         return matToBytes(rgba);
     }
-
-
-
-
-
 
     private Mat removal_func(Mat resized, Mat mask, Mat bgModel, Mat fgModel, Mat source) {
         // Step 1: Run GrabCut to create an initial foreground mask
@@ -232,6 +228,63 @@ public class BackgroundRemoval extends ImageProcessor{
         binaryMask.release();
 
         return rgba;
+    }
+
+    // Add this new method for automatic background removal
+    private byte[] removeBackgroundAutomatically() throws IOException {
+        Mat image = Imgcodecs.imdecode(new MatOfByte(imageData), Imgcodecs.IMREAD_UNCHANGED);
+        if (image.empty()) {
+            throw new IOException("Could not decode image");
+        }
+
+        // Convert to proper color format if needed
+        Mat bgra = new Mat();
+        if (image.channels() == 3) {
+            Imgproc.cvtColor(image, bgra, Imgproc.COLOR_BGR2BGRA);
+        } else {
+            image.copyTo(bgra);
+        }
+
+        // Create a mask using automatic methods (this is simplified)
+        Mat mask = new Mat(bgra.size(), CvType.CV_8UC1);
+        Mat bgModel = new Mat();
+        Mat fgModel = new Mat();
+
+        // Create a rectangle for GrabCut that covers most of the image but leaves
+        // borders
+        int margin = (int) (Math.min(bgra.width(), bgra.height()) * 0.02); // 2% margin
+        Rect rect = new Rect(
+                margin,
+                margin,
+                bgra.width() - 2 * margin,
+                bgra.height() - 2 * margin);
+
+        // Run GrabCut
+        Imgproc.grabCut(bgra, mask, rect, bgModel, fgModel, 5, Imgproc.GC_INIT_WITH_RECT);
+
+        // Create binary mask
+        Mat binaryMask = new Mat();
+        Core.compare(mask, new Scalar(Imgproc.GC_PR_FGD), binaryMask, Core.CMP_EQ);
+        Core.compare(mask, new Scalar(Imgproc.GC_FGD), mask, Core.CMP_EQ);
+        Core.bitwise_or(binaryMask, mask, binaryMask);
+
+        // Apply mask
+        Mat foreground = new Mat(bgra.size(), CvType.CV_8UC4, new Scalar(0, 0, 0, 0));
+        bgra.copyTo(foreground, binaryMask);
+
+        // Encode and return
+        MatOfByte matOfByte = new MatOfByte();
+        Imgcodecs.imencode(".png", foreground, matOfByte);
+        // Clean up resources
+        image.release();
+        bgra.release();
+        mask.release();
+        bgModel.release();
+        fgModel.release();
+        binaryMask.release();
+        foreground.release();
+
+        return matOfByte.toArray(); // Convert MatOfByte to byte array and return it
     }
 
 }
