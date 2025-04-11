@@ -77,6 +77,7 @@
             <version>0.4.20</version>
         </dependency>
 
+
         <!-- Utilities -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -91,7 +92,19 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+
+
+       <dependency>
+            <groupId>org.opencv</groupId>
+            <artifactId>opencv-java</artifactId>
+            <version>4.11.0</version> <!-- Use the correct version -->
+            <scope>system</scope>
+            <systemPath>${project.basedir}\libs\opencv-4110.jar</systemPath>  <!-- Adjust if needed --> 
+        </dependency>
+
     </dependencies>
+
+    
 
     <build>
         <plugins>
