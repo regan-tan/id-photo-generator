@@ -1,7 +1,7 @@
 package com.example.idphotogenerator.controller;
 
-import com.example.idphotogenerator.service.BatchProcessingService;
 import com.example.idphotogenerator.service_alt.BackgroundRemoval;
+import com.example.idphotogenerator.service_alt.BatchProcessingService;
 import com.example.idphotogenerator.service_alt.ChangeBackground;
 import com.example.idphotogenerator.service_alt.ClothesReplacement;
 import com.example.idphotogenerator.service_alt.ComplianceChecker;

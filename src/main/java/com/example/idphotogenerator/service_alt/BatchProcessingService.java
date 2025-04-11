@@ -1,4 +1,4 @@
-package com.example.idphotogenerator.service;
+package com.example.idphotogenerator.service_alt;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,9 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.example.idphotogenerator.service_alt.BackgroundRemoval;
-import com.example.idphotogenerator.service_alt.ChangeBackground;
 
 @Service
 public class BatchProcessingService {
