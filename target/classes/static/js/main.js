@@ -304,25 +304,33 @@ document.getElementById("customColor").addEventListener("input", function () {
         }
 
         // Function to check if mouse is over a resize handle
-        function getResizeHandle(x, y) {
-            if (selectedRectIndex === -1) return "";
-
-            const rect = rectangles[selectedRectIndex];
-            const handleSize = 8;
-
-            // Check each handle
-            if (Math.abs(x - rect.x) <= handleSize && Math.abs(y - rect.y) <= handleSize) {
-                return "tl"; // top-left
-            } else if (Math.abs(x - (rect.x + rect.width)) <= handleSize && Math.abs(y - rect.y) <= handleSize) {
-                return "tr"; // top-right
-            } else if (Math.abs(x - rect.x) <= handleSize && Math.abs(y - (rect.y + rect.height)) <= handleSize) {
-                return "bl"; // bottom-left
-            } else if (Math.abs(x - (rect.x + rect.width)) <= handleSize && Math.abs(y - (rect.y + rect.height)) <= handleSize) {
-                return "br"; // bottom-right
+        function getResizeHandle(mouseX, mouseY) {
+            const handleSize = 10;
+        
+            for (let i = 0; i < rectangles.length; i++) {
+                const rect = rectangles[i];
+        
+                const withinX = mouseX >= rect.x && mouseX <= rect.x + rect.width;
+                const withinY = mouseY >= rect.y && mouseY <= rect.y + rect.height;
+        
+                const nearLeft = Math.abs(mouseX - rect.x) < handleSize;
+                const nearRight = Math.abs(mouseX - (rect.x + rect.width)) < handleSize;
+                const nearTop = Math.abs(mouseY - rect.y) < handleSize;
+                const nearBottom = Math.abs(mouseY - (rect.y + rect.height)) < handleSize;
+        
+                if (nearLeft && nearTop) return "tl";
+                if (nearRight && nearTop) return "tr";
+                if (nearLeft && nearBottom) return "bl";
+                if (nearRight && nearBottom) return "br";
+                if (nearLeft && withinY) return "l";
+                if (nearRight && withinY) return "r";
+                if (nearTop && withinX) return "t";
+                if (nearBottom && withinX) return "b";
             }
-
-            return "";
+        
+            return null;
         }
+        
 
         // Function to check if point is inside a rectangle
         function isPointInRect(x, y, rect) {
@@ -369,17 +377,16 @@ document.getElementById("customColor").addEventListener("input", function () {
 
             drawRectangles();
         });
-
         canvas.addEventListener("mousemove", function (e) {
             // Replace the existing mouse coordinate calculation in mousedown, mousemove events
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width; // relationship bitmap vs. element for X
             const scaleY = canvas.height / rect.height; // relationship bitmap vs. element for Y
-
+        
             // Calculate accurate mouse position
             const x = (e.clientX - rect.left) * scaleX;
             const y = (e.clientY - rect.top) * scaleY;
-
+        
             // Update cursor based on position
             if (!isResizing && !isDragging) {
                 const handle = getResizeHandle(x, y);
@@ -401,13 +408,50 @@ document.getElementById("customColor").addEventListener("input", function () {
                     }
                 }
             }
-
+            if (!isResizing && !isDragging) {
+                const handle = getResizeHandle(x, y);
+                switch (handle) {
+                    case "tl":
+                    case "br":
+                        canvas.style.cursor = "nwse-resize";
+                        break;
+                    case "tr":
+                    case "bl":
+                        canvas.style.cursor = "nesw-resize";
+                        break;
+                    case "l":
+                    case "r":
+                        canvas.style.cursor = "ew-resize";
+                        break;
+                    case "t":
+                    case "b":
+                        canvas.style.cursor = "ns-resize";
+                        break;
+                    default:
+                        // Not on a handle, maybe on a rect?
+                        let onRect = false;
+                        for (let i = 0; i < rectangles.length; i++) {
+                            if (isPointInRect(x, y, rectangles[i])) {
+                                canvas.style.cursor = "move";
+                                onRect = true;
+                                break;
+                            }
+                        }
+                        if (!onRect) {
+                            canvas.style.cursor = "default";
+                        }
+                        break;
+                }
+            }
+            
+        
             // Handle resizing
             if (isResizing && selectedRectIndex !== -1) {
                 const rect = rectangles[selectedRectIndex];
                 const dx = x - startX;
                 const dy = y - startY;
-
+        
+                // Resizing logic for different handles
                 switch (resizeHandle) {
                     case "tl": // top-left
                         rect.x += dx;
@@ -429,40 +473,73 @@ document.getElementById("customColor").addEventListener("input", function () {
                         rect.width += dx;
                         rect.height += dy;
                         break;
+                    case "l": // left
+                        rect.x += dx;
+                        rect.width -= dx;
+                        break;
+                    case "r": // right
+                        rect.width += dx;
+                        break;
+                    case "t": // top
+                        rect.y += dy;
+                        rect.height -= dy;
+                        break;
+                    case "b": // bottom
+                        rect.height += dy;
+                        break;
                 }
-
+                
                 // Ensure minimum size
                 if (rect.width < 10) rect.width = 10;
                 if (rect.height < 10) rect.height = 10;
-
+        
+                // Ensure the rectangle stays within canvas bounds during resizing
+                rect.x = Math.max(0, Math.min(rect.x, canvas.width - rect.width));
+                rect.y = Math.max(0, Math.min(rect.y, canvas.height - rect.height));
+        
+                // Redraw the rectangles
                 startX = x;
                 startY = y;
-                drawRectangles();
+                drawRectangles();  // Ensure the canvas is updated immediately for smooth resizing
             }
-
+        
             // Handle dragging
             if (isDragging && selectedRectIndex !== -1 && !isResizing) {
                 const rect = rectangles[selectedRectIndex];
-                rect.x += x - startX;
-                rect.y += y - startY;
+                const dx = x - startX;
+                const dy = y - startY;
+        
+                // Move the rectangle by the difference in the cursor position
+                rect.x += dx;
+                rect.y += dy;
+        
+                // Limit rectangle within canvas bounds without snapping
+                rect.x = Math.max(0, Math.min(rect.x, canvas.width - rect.width));
+rect.y = Math.max(0, Math.min(rect.y, canvas.height - rect.height));
 
-                // Keep rectangle within canvas bounds
-                if (rect.x < 0) rect.x = 0;
-                if (rect.y < 0) rect.y = 0;
-                if (rect.x + rect.width > canvas.width) rect.x = canvas.width - rect.width;
-                if (rect.y + rect.height > canvas.height) rect.y = canvas.height - rect.height;
-
+        
+                // Update starting coordinates for the next drag iteration
                 startX = x;
                 startY = y;
-                drawRectangles();
+                drawRectangles();  // Update canvas immediately during dragging for smooth movement
             }
         });
-
-        canvas.addEventListener("mouseup", function () {
+        
+        window.addEventListener("mouseup", function () {
             isResizing = false;
             isDragging = false;
             resizeHandle = "";
         });
+        canvas.addEventListener('mouseleave', () => {
+            if (!isDragging && !isResizing) {
+                canvas.style.cursor = 'default';
+            }
+        });
+        
+        
+        
+
+        
 
         // Add rectangle button
         document.getElementById("addRectBtn").addEventListener("click", function () {
@@ -503,46 +580,58 @@ removeBackgroundBtn.addEventListener("click", async function () {
     previewModal.id = "rectanglePreviewModal";
     previewModal.innerHTML = `
     <div class="modal-dialog modal-md">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Background Removal</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Background Removal Tool</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+            <div class="alert alert-info mb-3">
+                <h6 class="mb-2">
+                    <i class="fas fa-info-circle me-2"></i>How it works:
+                </h6>
+                <p class="mb-2">Draw rectangles around parts of the image you want to <strong>keep</strong>. The rest will be removed.</p>
+                <ol class="small mb-2">
+                    <li>Click <strong>Add Rectangle</strong> to create a box.</li>
+                    <li>Drag to move the box over important areas.</li>
+                    <li>Resize from edges or corners as needed.</li>
+                    <li>You can add multiple boxes for complex shapes.</li>
+                </ol>
+                <p class="mt-2 small fst-italic">Tip: Want to auto-remove the background? Just skip the rectangles and hit "Remove Background."</p>
+                <div class="mt-3">
+                    <span class="badge bg-primary me-2" style="font-size: 0.8rem;">Blue Rectangle</span>
+                    <span class="small text-muted">= Area to keep</span><br>
+                    <span class="badge bg-danger me-2" style="font-size: 0.8rem;">Red Rectangle</span>
+                    <span class="small text-muted">= Currently selected rectangle</span><br>
+                    <span class="badge bg-light text-dark border me-2 mt-1" style="font-size: 0.8rem;"><i class="fas fa-arrows-alt"></i></span>
+                    <span class="small text-muted">= Drag to move</span><br>
+                    <span class="badge bg-light text-dark border me-2 mt-1" style="font-size: 0.8rem;">↔️ ↕️ ↘️</span>
+                    <span class="small text-muted">= Drag edges/corners to resize</span>
+                </div>
             </div>
-            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-                <div class="alert alert-info mb-3">
-                    <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i>How to use:</h6>
-                    <p class="mb-2">Draw rectangles around areas you want to <strong>KEEP</strong> in your photo:</p>
-                    <ol class="small mb-0">
-                        <li>Click <strong>Add Rectangle</strong> to create a selection area</li>
-                        <li>Position the rectangle over the part of your image you want to preserve</li>
-                        <li>Drag the corners to resize the rectangle</li>
-                        <li>Add multiple rectangles for complex images if needed</li>
-                        <li>Everything outside your rectangles will be removed</li>
-                    </ol>
-                    <div class="mt-2 small fst-italic">For fully automatic background removal, don't add any rectangles</div>
-                </div>
-    
-                <div class="text-center">
-                    <canvas id="previewCanvas" style="border:1px solid #ddd; max-width: 100%; height: auto; display: inline-block;"></canvas>
-                </div>
-            </div>
-            <div class="modal-footer d-flex justify-content-between">
-                <div>
-                    <button id="addRectBtn" class="btn btn-primary btn-sm me-2">
-                        <i class="fas fa-plus-square me-1"></i>Add Rectangle
-                    </button>
-                    <button id="removeRectBtn" class="btn btn-danger btn-sm">
-                        <i class="fas fa-trash-alt me-1"></i>Remove Selected
-                    </button>
-                </div>
-                <button type="button" class="btn btn-primary" id="applyBackgroundRemoval">
-                    <i class="fas fa-magic me-1"></i>Remove Background
-                </button>
+
+            <div class="text-center">
+                <canvas id="previewCanvas" style="border:1px solid #ddd; max-width: 100%; height: auto; display: inline-block;"></canvas>
             </div>
         </div>
+        <div class="modal-footer d-flex justify-content-between">
+            <div>
+                <button id="addRectBtn" class="btn btn-primary btn-sm me-2">
+                    <i class="fas fa-plus-square me-1"></i>Add Rectangle
+                </button>
+                <button id="removeRectBtn" class="btn btn-danger btn-sm">
+                    <i class="fas fa-trash-alt me-1"></i>Remove Selected
+                </button>
+            </div>
+            <button type="button" class="btn btn-primary" id="applyBackgroundRemoval">
+                <i class="fas fa-magic me-1"></i>Remove Background
+            </button>
+        </div>
     </div>
-    `;
-    
+</div>
+
+   `;
+
         document.body.appendChild(previewModal);
     
         const previewModalInstance = new bootstrap.Modal(previewModal);

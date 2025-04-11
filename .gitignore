@@ -1,4 +1,4 @@
 *.jar
 *.jar.*
-target/
+target/*
 target/classes/static/js/main.js
