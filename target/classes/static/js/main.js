@@ -31,6 +31,12 @@ layoutSelect.addEventListener("change", () => {
         gridOptions.classList.add("d-none");
     }
 });
+document.getElementById("customColor").addEventListener("input", function () {
+    const customColor = this.value;
+    applyBackground(customColor);
+});
+
+
 
 
     function saveImageState() {

@@ -105,28 +105,29 @@
                                 <div class="feature-group">
                                     <h6 class="feature-group-title"><span class="step-badge">2</span> Background Options</h6>
                                     <div class="mb-3">
-                                        <label class="form-label">Background Color</label>
-                                        <div class="d-flex flex-wrap gap-2 mb-2">
-                                            <!-- Color buttons -->
-                                            <button class="color-btn" data-color="#FFFFFF" style="background-color: #ffffff"
-                                                title="White - Standard Passport"></button>
-                                            <button class="color-btn" data-color="#87CEEB" style="background-color: #87ceeb"
-                                                title="Light Blue - General ID"></button>
-                                            <button class="color-btn" data-color="#B0C4DE" style="background-color: #b0c4de"
-                                                title="Light Steel Blue - Visa"></button>
-                                            <button class="color-btn" data-color="#F5F5F5" style="background-color: #f5f5f5"
-                                                title="Off White - General Use"></button>
-                                            <button class="color-btn" data-color="#E0FFFF" style="background-color: #e0ffff"
-                                                title="Light Cyan - Schengen Visa"></button>
-                                            <button class="color-btn" data-color="#D3D3D3" style="background-color: #d3d3d3"
-                                                title="Light Gray - Professional ID"></button>
-                                            <button class="color-btn" data-color="#F0F8FF" style="background-color: #f0f8ff"
-                                                title="Alice Blue - General ID"></button>
-                                            <button class="color-btn" data-color="#E6E6FA" style="background-color: #e6e6fa"
-                                                title="Lavender - Alternative"></button>
-                                            <button class="color-btn" data-color="#F0FFFF" style="background-color: #f0ffff"
-                                                title="Azure - General Use"></button>
+                                        <div class="d-flex flex-wrap gap-2 mb-2 align-items-center">
+                                            <!-- Predefined color buttons -->
+                                            <button class="color-btn" data-color="#FFFFFF" style="background-color: #ffffff" title="White - Standard Passport"></button>
+                                            <button class="color-btn" data-color="#87CEEB" style="background-color: #87ceeb" title="Light Blue - General ID"></button>
+                                            <button class="color-btn" data-color="#B0C4DE" style="background-color: #b0c4de" title="Light Steel Blue - Visa"></button>
+                                            <button class="color-btn" data-color="#F5F5F5" style="background-color: #f5f5f5" title="Off White - General Use"></button>
+                                            <button class="color-btn" data-color="#E0FFFF" style="background-color: #e0ffff" title="Light Cyan - Schengen Visa"></button>
+                                            <button class="color-btn" data-color="#D3D3D3" style="background-color: #d3d3d3" title="Light Gray - Professional ID"></button>
+                                            <button class="color-btn" data-color="#F0F8FF" style="background-color: #f0f8ff" title="Alice Blue - General ID"></button>
+                                            <button class="color-btn" data-color="#E6E6FA" style="background-color: #e6e6fa" title="Lavender - Alternative"></button>
+                                            <button class="color-btn" data-color="#F0FFFF" style="background-color: #f0ffff" title="Azure - General Use"></button>
+                                        
+                                            <!-- Custom color button with label -->
+                                            <label for="customColor" class="d-flex align-items-center" style="gap: 6px; border: 1px solid #ccc; border-radius: 4px; padding: 4px 8px; cursor: pointer;">
+                                                <span style="font-size: 14px;">🎨 Custom</span>
+                                                <input type="color" id="customColor" title="Choose a custom color" 
+                                                       style="appearance: none; -webkit-appearance: none; border: none; width: 24px; height: 24px; border-radius: 4px; padding: 0; cursor: pointer;">
+                                            </label>
                                         </div>
+                                        
+                                        
+                                        
+                                       
                                     </div>
 
                                     <!-- Dropdown for Country Selection -->
