@@ -188,28 +188,40 @@
                                             <option value="grid">Grid (Multiple photos)</option>
                                         </select>
                                     </div>
+                                    <!-- Grid Layout Size - Only shown if Grid is selected -->
+<div class="mb-3 d-none" id="grid_layout_options">
+    <label class="form-label">Grid Layout</label>
+    <div class="row g-2 mb-2 align-items-center">
+        <div class="col">
+            <label for="grid_columns" class="form-label mb-1">Columns</label>
+            <select class="form-select" id="grid_columns">
+                <option disabled selected>Select columns</option>
+                <option value="1">1 Column</option>
+                <option value="2">2 Columns</option>
+                <option value="3">3 Columns</option>
+                <option value="4">4 Columns</option>
+                <option value="5">5 Columns</option>
+            </select>
+        </div>
+        <div class="col-auto text-center">
+            <span class="fw-bold">×</span>
+        </div>
+        <div class="col">
+            <label for="grid_rows" class="form-label mb-1">Rows</label>
+            <select class="form-select" id="grid_rows">
+                <option disabled selected>Select rows</option>
+                <option value="1">1 Row</option>
+                <option value="2">2 Rows</option>
+                <option value="3">3 Rows</option>
+                <option value="4">4 Rows</option>
+                <option value="5">5 Rows</option>
+            </select>
+        </div>
+    </div>
+    
+</div>
 
-                                    <div class="mb-3">
-                                        <label class="form-label">Print Size</label>
-                                        <div class="input-group mb-2">
-                                            <select class="form-select" id="layout_width">
-                                                <option value="3.5">3.5</option>
-                                                <option value="4">4</option>
-                                                <option value="4.5">4.5</option>
-                                                <option value="5">5</option>
-                                                <option value="5.5">5.5</option>
-                                            </select>
-                                            <span class="input-group-text">×</span>
-                                            <select class="form-select" id="layout_height">
-                                                <option value="5">5</option>
-                                                <option value="5.5">5.5</option>
-                                                <option value="6">6</option>
-                                                <option value="7">7</option>
-                                                <option value="7.5">7.5</option>
-                                            </select>
-                                            <span class="input-group-text">cm</span>
-                                        </div>
-                                    </div>
+                                   
 
                                     <!-- Output Format & Resolution Section -->
                                     <div class="row mb-3">

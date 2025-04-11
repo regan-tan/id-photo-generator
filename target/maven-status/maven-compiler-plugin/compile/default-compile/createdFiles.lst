@@ -1,14 +1,10 @@
-com/example/idphotogenerator/service/ClothesReplacementService.class
-com/example/idphotogenerator/service/PhotoEnhancementService.class
-com/example/idphotogenerator/service/ComplianceCheckerService.class
-com/example/idphotogenerator/controller/ImageController_alt.class
-com/example/idphotogenerator/service_alt/ImageProcessor.class
 com/example/idphotogenerator/IdPhotoGeneratorApplication.class
-com/example/idphotogenerator/service/BatchProcessingService.class
 com/example/idphotogenerator/service_alt/ClothesReplacement.class
-com/example/idphotogenerator/service/ImageProcessingService.class
+com/example/idphotogenerator/service_alt/BatchProcessingService.class
 com/example/idphotogenerator/controller/ImageController_alt$1.class
+com/example/idphotogenerator/controller/ImageController_alt.class
 com/example/idphotogenerator/service_alt/PhotoEnhancement.class
 com/example/idphotogenerator/service_alt/ComplianceChecker.class
 com/example/idphotogenerator/service_alt/BackgroundRemoval.class
+com/example/idphotogenerator/service_alt/ImageProcessor.class
 com/example/idphotogenerator/service_alt/ChangeBackground.class

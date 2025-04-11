@@ -11,16 +11,27 @@ document.addEventListener("DOMContentLoaded", function () {
     const cropModal = new bootstrap.Modal(cropModalElement);
     const cropImage = document.getElementById("cropImage");
     const undoBtn = document.getElementById("undoBtn");
-    const layout_height = document.getElementById("layout_height");
-    const layout_width = document.getElementById("layout_width");
+    const grid_columns = document.getElementById("grid_columns");
+    const grid_rows = document.getElementById("grid_rows");
     const clothesBtn = document.getElementById("clothesBtn");
     const clothesModalElement = document.getElementById("clothesModal");
     const clothesModal = new bootstrap.Modal(clothesModalElement);
     const clothesImage = document.getElementById("clothesImage");
     const confirmClothesBtn = document.getElementById("confirmClothesBtn");
     let selectedTemplate = ""; // Variable to track the selected template
-    let layout_heightValue = 1;
-    let layout_widthValue = 1;
+    let grid_columnsValue = 1;
+    let grid_rowsValue = 1;
+    const layoutSelect = document.getElementById("photo_layout");
+const gridOptions = document.getElementById("grid_layout_options");
+
+layoutSelect.addEventListener("change", () => {
+    if (layoutSelect.value === "grid") {
+        gridOptions.classList.remove("d-none");
+    } else {
+        gridOptions.classList.add("d-none");
+    }
+});
+
 
     function saveImageState() {
         imageHistory.push(image.src);
@@ -41,11 +52,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    layout_height.addEventListener("change", function () {
-        layout_heightValue = layout_height.value;
+    grid_columns.addEventListener("change", function () {
+        grid_columnsValue = grid_columns.value;
     });
-    layout_width.addEventListener("change", function () {
-        layout_widthValue = layout_width.value;
+    grid_rows.addEventListener("change", function () {
+        grid_rowsValue = grid_rows.value;
     });
 
     undoBtn.addEventListener("click", undo);
@@ -957,63 +968,72 @@ function resetBackground() {
             });
     }
 
-    // Export functionality
-    exportBtn.addEventListener("click", async function () {
-        const canvas = document.createElement("canvas");
-        const layoutHeight = parseFloat(document.getElementById("layout_height").value);
-        const layoutWidth = parseFloat(document.getElementById("layout_width").value);
-        const outputFormat = document.getElementById("output_format").value;
-        const outputResolution = parseInt(document.getElementById("output_resolution").value);
-        const fileName = document.getElementById("file_name").value || "id-photo";  // Default file name if none provided
-        const photoLayout = document.getElementById("photo_layout").value;  // Get selected layout type
-        
-        // Get the original image
-        const imageObj = new Image();
-        imageObj.src = image.src;  // Ensure the image is being referenced correctly
+   // Export functionality
+exportBtn.addEventListener("click", async function () {
+    const canvas = document.createElement("canvas");
+    const layoutHeight = parseFloat(document.getElementById("grid_columns").value);
+    const layoutWidth = parseFloat(document.getElementById("grid_rows").value);
+    const outputFormat = document.getElementById("output_format").value;
+    const outputResolution = parseInt(document.getElementById("output_resolution").value);
+    const fileName = document.getElementById("file_name").value || "id-photo";  // Default file name if none provided
+    const photoLayout = document.getElementById("photo_layout").value;  // Get selected layout type
     
-        // Wait for the image to load
-        imageObj.onload = function () {
-            const imgWidth = imageObj.width;
-            const imgHeight = imageObj.height;
+    // For grid layout, fetch values from grid_columns and grid_rows
+    let gridColumns = 1;
+    let gridRows = 1;
+    if (photoLayout === "grid") {
+        gridColumns = parseInt(document.getElementById("grid_columns").value);
+        gridRows = parseInt(document.getElementById("grid_rows").value);
+    }
     
-            if (photoLayout === "single") {
-                // Single photo layout logic
-                canvas.width = imgWidth;
-                canvas.height = imgHeight;
-            } else {
-                // Grid layout logic
-                canvas.width = imgWidth * layoutWidth;
-                canvas.height = imgHeight * layoutHeight;
-                const scaleFactor = outputResolution / 300;  // Assuming 300 DPI is the base resolution
-                canvas.width *= scaleFactor;
-                canvas.height *= scaleFactor;
-            }
-    
-            const ctx = canvas.getContext("2d");
-    
-            if (photoLayout === "single") {
-                // Draw a single image on the canvas
-                ctx.drawImage(imageObj, 0, 0, imgWidth, imgHeight);
-            } else {
-                // Draw the image in a grid layout
-                for (let i = 0; i < layoutHeight; i++) {
-                    for (let j = 0; j < layoutWidth; j++) {
-                        ctx.drawImage(imageObj, j * imgWidth, i * imgHeight, imgWidth, imgHeight);
-                    }
+    // Get the original image (ensure image is defined)
+    const imageObj = new Image();
+    imageObj.src = image.src || "";  // Ensure the image is being referenced correctly
+
+    // Wait for the image to load
+    imageObj.onload = function () {
+        const imgWidth = imageObj.width;
+        const imgHeight = imageObj.height;
+
+        if (photoLayout === "single") {
+            // Single photo layout logic
+            canvas.width = imgWidth;
+            canvas.height = imgHeight;
+        } else {
+            // Grid layout logic
+            canvas.width = imgWidth * gridColumns;
+            canvas.height = imgHeight * gridRows;
+            const scaleFactor = outputResolution / 300;  // Assuming 300 DPI is the base resolution
+            canvas.width *= scaleFactor;
+            canvas.height *= scaleFactor;
+        }
+
+        const ctx = canvas.getContext("2d");
+
+        if (photoLayout === "single") {
+            // Draw a single image on the canvas
+            ctx.drawImage(imageObj, 0, 0, imgWidth, imgHeight);
+        } else {
+            // Draw the image in a grid layout
+            for (let i = 0; i < gridRows; i++) {
+                for (let j = 0; j < gridColumns; j++) {
+                    ctx.drawImage(imageObj, j * imgWidth, i * imgHeight, imgWidth, imgHeight);
                 }
             }
-    
-            // Export the image to Blob and download it
-            canvas.toBlob(async function (blob) {
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = `${fileName}.${outputFormat}`;  // Use the provided or default file name with the selected format
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }, `image/${outputFormat}`, 1.0);  // Specify output format
-        };
-    });
+        }
+
+        // Export the image to Blob and download it
+        canvas.toBlob(async function (blob) {
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `${fileName}.${outputFormat}`;  // Use the provided or default file name with the selected format
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }, `image/${outputFormat}`, 1.0);  // Specify output format
+    };
+});
+
     
     
     // Variables for image enhancement
