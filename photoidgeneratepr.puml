@@ -1,0 +1,93 @@
+@startuml ID Photo Generator
+
+' Base class
+abstract class ImageProcessor {
+  # byte[] imageData
+  + ImageProcessor(byte[] imageData)
+  # Mat bytesToMat(byte[] imageData)
+  # Mat bytesToMat_clothReplace(byte[] imageData)
+  # byte[] matToBytes(Mat mat)
+  - Mat bufferedImageToMat(BufferedImage image)
+}
+
+' Subclasses extending ImageProcessor
+class ComplianceChecker extends ImageProcessor {
+  - CascadeClassifier faceDetector
+  - Mat image
+  + ComplianceChecker(byte[] imageData)
+  + Map<String, String> checkCompliance()
+}
+
+class BackgroundRemoval extends ImageProcessor {
+  - Map<Integer, List<Integer>> rectangles_dim
+  + BackgroundRemoval(byte[] imageData, Map<Integer, List<Integer>> rectangles_dim)
+  + byte[] removeBackground()
+  - byte[] removeBackgroundAutomatically()
+  - Mat removal_func(Mat resized, Mat mask, Mat bgModel, Mat fgModel, Mat source)
+}
+
+class PhotoEnhancement extends ImageProcessor {
+  - int brightness
+  - int contrast
+  - int smoothness
+  - Mat enhancedImage
+  + PhotoEnhancement(byte[] imageData, int brightness, int contrast, int smoothness)
+  + byte[] enhancePhoto()
+  - void adjustBrightnessContrast()
+  - void smoothSkin()
+  - Mat detectSkin()
+}
+
+class ClothesReplacement extends ImageProcessor {
+  - byte[] outfitTemplateData
+  + ClothesReplacement(byte[] imageData, byte[] outfitTemplateData)
+  + byte[] replaceClothes()
+  - Mat resizeOutfitToFit(Mat userImage, Mat outfitTemplate)
+  - Mat overlayImages(Mat userImage, Mat outfitTemplate)
+}
+
+class ChangeBackground extends ImageProcessor {
+  - String backgroundColor
+  - byte[] backgroundImageData
+  + ChangeBackground(byte[] imageData, String backgroundColor, byte[] backgroundImageData)
+  + byte[] changeBackground()
+}
+
+' Service class for batch processing
+class BatchProcessingService {
+  - Logger log
+  - ExecutorService executorService
+  + List<byte[]> processBatchImages(List<MultipartFile> files, String backgroundColor)
+  + byte[] createZipFromProcessedImages(List<byte[]> processedImages)
+}
+
+' Controller class
+class ImageController_alt {
+  - Logger log
+  - ExecutorService executorService
+  - BatchProcessingService batchProcessingService
+  - String mapColorNameToHex(String colorName)
+  + String index()
+  + ResponseEntity<byte[]> removeBackground(MultipartFile image, String rectanglesJson)
+  + ResponseEntity<byte[]> changeBackground(MultipartFile image, String backgroundColor, MultipartFile backgroundImage)
+  + ResponseEntity<byte[]> replaceClothes(MultipartFile image, String templateName)
+  + ResponseEntity<byte[]> enhancePhoto(MultipartFile image, int brightness, int contrast, int smoothness)
+  + Map<String, String> checkCompliance(MultipartFile file)
+  + ResponseEntity<Map<String, Object>> processBatch(List<MultipartFile> files, String backgroundColor, MultipartFile backgroundImage)
+  + ResponseEntity<byte[]> downloadBatchZip(List<MultipartFile> files, String backgroundColor, MultipartFile backgroundImage)
+}
+
+' Main application class
+class IdPhotoGeneratorApplication {
+  + {static} void main(String[] args)
+}
+
+' Relationships
+ImageController_alt --> BatchProcessingService : uses
+ImageController_alt --> ComplianceChecker : creates
+ImageController_alt --> BackgroundRemoval : creates
+ImageController_alt --> ChangeBackground : creates
+ImageController_alt --> ClothesReplacement : creates
+ImageController_alt --> PhotoEnhancement : creates
+
+@enduml
