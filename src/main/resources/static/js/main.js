@@ -702,42 +702,69 @@ document.getElementById("backgroundImageInput").addEventListener("change", funct
     }
 });
 
-// Apply the custom background image
 function applyBackgroundImage(backgroundImage, file) {
-    saveImageState();  // Assuming this function saves the image state
-
-    const formData = new FormData();  // Initialize FormData here
-    let sourceImage = originalTransparentImage.slice(0);  // Create a copy to send each time
-
-    // Append the original image to the formData
-    formData.append("image", sourceImage);
-
-    // Append the background image file (JPEG or PNG)
-    formData.append("backgroundImage", file);
+    saveImageState();
     
-    // Log FormData contents to verify
-    console.log("FormData before sending:");
-    formData.forEach((value, key) => {
-        console.log(key, value);
-    });
-
-    // Send the data to the backend
-    fetch("/api/change-background", {
-        method: "POST",
-        body: formData,
-    })
-    .then((response) => response.blob())
-    .then((result) => {
-        image.src = URL.createObjectURL(result);
-        image.dataset.backgroundRemoved = "false";
-    })
-    .catch((error) => {
-        console.error("Error:", error);
-        alert("An error occurred while changing the background image.");
-    });
-
-    // Show the reset button when a custom background image is applied
-    document.getElementById("resetBackgroundBtn").style.display = "block";
+    // Create a FormData object for the request
+    const formData = new FormData();
+    
+    // Check if originalTransparentImage exists
+    if (typeof window.originalTransparentImage !== 'undefined') {
+        console.log("Using stored transparent image");
+        formData.append("image", window.originalTransparentImage);
+        proceedWithRequest();
+    } else {
+        console.log("No transparent image found, using current image");
+        fetch(image.src)
+            .then(response => response.blob())
+            .then(blob => {
+                formData.append("image", blob);
+                proceedWithRequest();
+            })
+            .catch(error => {
+                console.error("Error fetching image:", error);
+                alert("Error processing the image. Please try again.");
+            });
+    }
+    
+    function proceedWithRequest() {
+        // Add a valid hex color code for backgroundColor
+        formData.append("backgroundColor", "#FFFFFF");
+        
+        // Append the background image file
+        formData.append("backgroundImage", file);
+        
+        // Log FormData contents to verify
+        console.log("FormData before sending:");
+        formData.forEach((value, key) => {
+            console.log(key, value);
+        });
+        
+        // Send the data to the backend
+        fetch("/api/change-background", {
+            method: "POST",
+            body: formData,
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`Server error (${response.status}): ${text}`);
+                });
+            }
+            return response.blob();
+        })
+        .then(result => {
+            image.src = URL.createObjectURL(result);
+            image.dataset.backgroundRemoved = "false";
+            
+            // Show the reset button
+            document.getElementById("resetBackgroundBtn").style.display = "block";
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred while changing the background image.");
+        });
+    }
 }
 
 // Handle reset background button click
