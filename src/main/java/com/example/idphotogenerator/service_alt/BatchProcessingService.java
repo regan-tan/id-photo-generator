@@ -1,11 +1,4 @@
-package com.example.idphotogenerator.service;
-
-import com.example.idphotogenerator.service_alt.BackgroundRemoval;
-import com.example.idphotogenerator.service_alt.ChangeBackground;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+package com.example.idphotogenerator.service_alt;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,6 +10,11 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class BatchProcessingService {
@@ -62,7 +60,7 @@ public class BatchProcessingService {
                     }
 
                     log.debug("Changing background color to: {}", backgroundColor);
-                    ChangeBackground changeBackground = new ChangeBackground(withoutBackground, backgroundColor);
+                    ChangeBackground changeBackground = new ChangeBackground(withoutBackground, backgroundColor, null);
                     byte[] result = changeBackground.changeBackground();
 
                     if (result == null || result.length == 0) {

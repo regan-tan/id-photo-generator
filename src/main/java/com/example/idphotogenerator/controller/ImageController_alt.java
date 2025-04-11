@@ -1,7 +1,7 @@
 package com.example.idphotogenerator.controller;
 
-import com.example.idphotogenerator.service.BatchProcessingService;
 import com.example.idphotogenerator.service_alt.BackgroundRemoval;
+import com.example.idphotogenerator.service_alt.BatchProcessingService;
 import com.example.idphotogenerator.service_alt.ChangeBackground;
 import com.example.idphotogenerator.service_alt.ClothesReplacement;
 import com.example.idphotogenerator.service_alt.ComplianceChecker;
@@ -36,6 +36,7 @@ import java.nio.file.Path;
 
 @Controller
 public class ImageController_alt {
+
     static {
         nu.pattern.OpenCV.loadLocally();
     }
@@ -45,32 +46,32 @@ public class ImageController_alt {
     private final ExecutorService executorService = Executors.newFixedThreadPool(
             Math.max(2, Runtime.getRuntime().availableProcessors()));
 
-            private String mapColorNameToHex(String colorName) {
-                // Map color names to hex codes for the ChangeBackground class
-                Map<String, String> colorMap = new HashMap<>();
-                // Basic colors
-                colorMap.put("white", "#FFFFFF");
-                colorMap.put("black", "#000000");
-                colorMap.put("red", "#FF0000");
-                colorMap.put("green", "#00FF00");
-                colorMap.put("blue", "#87CEEB");  // Light blue
-                colorMap.put("yellow", "#FFFF00");
-                colorMap.put("gray", "#808080");
-                
-                // Add the complex color names from your dropdown
-                colorMap.put("light_gray", "#D3D3D3");
-                colorMap.put("light_blue", "#87CEEB");
-                colorMap.put("steel_blue", "#B0C4DE");
-                colorMap.put("off_white", "#F5F5F5");
-                colorMap.put("light_cyan", "#E0FFFF");
-                
-                // Return the hex if the color name is mapped, or the original string if it appears to be a hex code
-                if (colorName.startsWith("#")) {
-                    return colorName;
-                }
-                
-                return colorMap.getOrDefault(colorName.toLowerCase(), "#FFFFFF");  // Default to white if not found
-            }
+    private String mapColorNameToHex(String colorName) {
+        // Map color names to hex codes for the ChangeBackground class
+        Map<String, String> colorMap = new HashMap<>();
+        // Basic colors
+        colorMap.put("white", "#FFFFFF");
+        colorMap.put("black", "#000000");
+        colorMap.put("red", "#FF0000");
+        colorMap.put("green", "#00FF00");
+        colorMap.put("blue", "#87CEEB");  // Light blue
+        colorMap.put("yellow", "#FFFF00");
+        colorMap.put("gray", "#808080");
+
+        // Add the complex color names from your dropdown
+        colorMap.put("light_gray", "#D3D3D3");
+        colorMap.put("light_blue", "#87CEEB");
+        colorMap.put("steel_blue", "#B0C4DE");
+        colorMap.put("off_white", "#F5F5F5");
+        colorMap.put("light_cyan", "#E0FFFF");
+
+        // Return the hex if the color name is mapped, or the original string if it appears to be a hex code
+        if (colorName.startsWith("#")) {
+            return colorName;
+        }
+
+        return colorMap.getOrDefault(colorName.toLowerCase(), "#FFFFFF");  // Default to white if not found
+    }
 
     @GetMapping("/")
     public String index() {
@@ -91,7 +92,7 @@ public class ImageController_alt {
             ObjectMapper mapper = new ObjectMapper();
             Map<String, List<Double>> rectangles = mapper.readValue(rectanglesJson,
                     new TypeReference<Map<String, List<Double>>>() {
-                    });
+            });
             BackgroundRemoval backgroundRemoval = new BackgroundRemoval(image.getBytes(), rectangles);
             byte[] processedImage = backgroundRemoval.removeBackground();
             return ResponseEntity.ok()
@@ -107,13 +108,28 @@ public class ImageController_alt {
     @ResponseBody
     public ResponseEntity<byte[]> changeBackground(
             @RequestParam("image") MultipartFile image,
-            @RequestParam("backgroundColor") String backgroundColor) {
+            @RequestParam("backgroundColor") String backgroundColor,
+            @RequestParam(value = "backgroundImage", required = false) MultipartFile backgroundImage) {
         try {
             if (image.isEmpty()) {
                 return ResponseEntity.badRequest().build();
             }
-            ChangeBackground changeBackground = new ChangeBackground(image.getBytes(), backgroundColor);
+
+            byte[] backgroundImageData = null;
+            if (backgroundImage != null && !backgroundImage.isEmpty()) {
+                backgroundImageData = backgroundImage.getBytes();
+            }
+
+            // Create the ChangeBackground instance with the correct parameters, including backgroundImageData
+            ChangeBackground changeBackground = new ChangeBackground(
+                    image.getBytes(),
+                    backgroundColor,
+                    backgroundImageData
+            );
+
+            // Call the changeBackground method without parameters
             byte[] processedImage = changeBackground.changeBackground();
+
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_PNG)
                     .body(processedImage);
@@ -201,12 +217,14 @@ public class ImageController_alt {
     @Autowired
     private BatchProcessingService batchProcessingService;
 
-    // Endpoint for batch processing
+// Endpoint for batch processing
     @PostMapping("/api/batch/process")
     @ResponseBody
+
     public ResponseEntity<?> processBatch(
             @RequestParam("files") List<MultipartFile> files,
-            @RequestParam(value = "backgroundColor", defaultValue = "white") String backgroundColor) {
+            @RequestParam(value = "backgroundColor", defaultValue = "white") String backgroundColor,
+            @RequestParam(value = "backgroundImage", required = false) MultipartFile backgroundImage) {
 
         try {
             if (files == null || files.isEmpty()) {
@@ -223,6 +241,13 @@ public class ImageController_alt {
             log.info("Starting batch processing for {} images with background color: {}",
                     files.size(), backgroundColor);
 
+            // Get background image data if provided
+            byte[] backgroundImageData = null;
+            if (backgroundImage != null && !backgroundImage.isEmpty()) {
+                backgroundImageData = backgroundImage.getBytes();
+                log.info("Using background image: {}, size: {}", backgroundImage.getOriginalFilename(), backgroundImage.getSize());
+            }
+
             // Process images sequentially instead of using the batch service
             List<byte[]> processedImages = new ArrayList<>();
 
@@ -238,9 +263,9 @@ public class ImageController_alt {
                     BackgroundRemoval backgroundRemoval = new BackgroundRemoval(file.getBytes(), emptyRectangles);
                     byte[] withoutBackground = backgroundRemoval.removeBackground();
 
-                    // Change background color
+                    // Change background color using the updated constructor
                     String colorToUse = mapColorNameToHex(backgroundColor);
-                    ChangeBackground changeBackground = new ChangeBackground(withoutBackground, colorToUse);
+                    ChangeBackground changeBackground = new ChangeBackground(withoutBackground, colorToUse, backgroundImageData);
                     byte[] result = changeBackground.changeBackground();
 
                     processedImages.add(result);
@@ -281,7 +306,8 @@ public class ImageController_alt {
     @PostMapping(value = "/api/batch/download", produces = "application/zip")
     public ResponseEntity<byte[]> downloadBatchZip(
             @RequestParam("files") List<MultipartFile> files,
-            @RequestParam(value = "backgroundColor", defaultValue = "white") String backgroundColor) {
+            @RequestParam(value = "backgroundColor", defaultValue = "white") String backgroundColor,
+            @RequestParam(value = "backgroundImage", required = false) MultipartFile backgroundImage) {
 
         try {
             if (files == null || files.isEmpty()) {
@@ -289,6 +315,13 @@ public class ImageController_alt {
             }
 
             log.info("Preparing batch download for {} images", files.size());
+
+            // Get background image data if provided
+            byte[] backgroundImageData = null;
+            if (backgroundImage != null && !backgroundImage.isEmpty()) {
+                backgroundImageData = backgroundImage.getBytes();
+                log.info("Using background image for download: {}", backgroundImage.getOriginalFilename());
+            }
 
             // Process the images same as in processBatch method
             List<byte[]> processedImages = new ArrayList<>();
@@ -302,7 +335,8 @@ public class ImageController_alt {
                     byte[] withoutBackground = backgroundRemoval.removeBackground();
 
                     String colorToUse = mapColorNameToHex(backgroundColor);
-                    ChangeBackground changeBackground = new ChangeBackground(withoutBackground, colorToUse);
+                    // Use the updated constructor with background image
+                    ChangeBackground changeBackground = new ChangeBackground(withoutBackground, colorToUse, backgroundImageData);
                     byte[] result = changeBackground.changeBackground();
 
                     processedImages.add(result);
@@ -329,8 +363,6 @@ public class ImageController_alt {
             return ResponseEntity.internalServerError().build();
         }
     }
-
     // cloud feature: list google drive image files
-
     // Download image by fileID
 }
