@@ -477,40 +477,50 @@ document.addEventListener("DOMContentLoaded", function () {
         drawRectangles();
     }
 
-    // Background removal with rectangle preview
-    removeBackgroundBtn.addEventListener("click", async function () {
-        // Create a preview canvas for rectangle drawing
-        const previewModal = document.createElement("div");
-        previewModal.className = "modal fade";
-        previewModal.id = "rectanglePreviewModal";
-        previewModal.innerHTML = `
-    <div class="modal-dialog modal-lg">
+    
+// Background removal with rectangle preview
+removeBackgroundBtn.addEventListener("click", async function () {
+    // Create a preview canvas for rectangle drawing
+    const previewModal = document.createElement("div");
+    previewModal.className = "modal fade";
+    previewModal.id = "rectanglePreviewModal";
+    previewModal.innerHTML = `
+    <div class="modal-dialog modal-md">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Background Removal</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-                <div class="instructions-container mb-3">
-                    <p class="mb-2">Draw rectangles around areas to keep in your image:</p>
-                    <ul class="small">
-                        <li>Click <strong>Add Rectangle</strong>  to create a selection area</li>
+                <div class="alert alert-info mb-3">
+                    <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i>How to use:</h6>
+                    <p class="mb-2">Draw rectangles around areas you want to <strong>KEEP</strong> in your photo:</p>
+                    <ol class="small mb-0">
+                        <li>Click <strong>Add Rectangle</strong> to create a selection area</li>
+                        <li>Position the rectangle over the part of your image you want to preserve</li>
                         <li>Drag the corners to resize the rectangle</li>
-                        <li>Add multiple rectangles for complex images</li>
-                        <li><strong>Do not use a rectangle</strong> for fully automatic background removal</li>
-                    </ul>
+                        <li>Add multiple rectangles for complex images if needed</li>
+                        <li>Everything outside your rectangles will be removed</li>
+                    </ol>
+                    <div class="mt-2 small fst-italic">For fully automatic background removal, don't add any rectangles</div>
                 </div>
     
                 <div class="text-center">
-                    <canvas id="previewCanvas" style="border:1px solid #ddd; min-width:60%;max-width: 80%; height: auto; display: inline-block;"></canvas>
+                    <canvas id="previewCanvas" style="border:1px solid #ddd; max-width: 100%; height: auto; display: inline-block;"></canvas>
                 </div>
             </div>
             <div class="modal-footer d-flex justify-content-between">
                 <div>
-                    <button id="addRectBtn" class="btn btn-primary btn-sm me-2">Add New Rectangle</button>
-                    <button id="removeRectBtn" class="btn btn-danger btn-sm">Remove Selected Rectangle</button>
+                    <button id="addRectBtn" class="btn btn-primary btn-sm me-2">
+                        <i class="fas fa-plus-square me-1"></i>Add Rectangle
+                    </button>
+                    <button id="removeRectBtn" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash-alt me-1"></i>Remove Selected
+                    </button>
                 </div>
-                <button type="button" class="btn btn-primary" id="applyBackgroundRemoval">Remove Background</button>
+                <button type="button" class="btn btn-primary" id="applyBackgroundRemoval">
+                    <i class="fas fa-magic me-1"></i>Remove Background
+                </button>
             </div>
         </div>
     </div>
