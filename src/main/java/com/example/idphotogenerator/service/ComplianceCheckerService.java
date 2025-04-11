@@ -1,7 +1,9 @@
 package com.example.idphotogenerator.service;
 
-import java.net.URL;
-import java.nio.file.Paths;
+import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,29 +14,36 @@ import org.opencv.objdetect.CascadeClassifier;
 import org.springframework.stereotype.Service;
 
 
+
 @Service
 public class ComplianceCheckerService {
 
     private final CascadeClassifier faceDetector;
 
-    public ComplianceCheckerService() {
+   public ComplianceCheckerService() {
     try {
-        URL resource = getClass().getClassLoader().getResource("haarcascade_frontalface_default.xml");
-        if (resource == null) {
+        // Load Haar Cascade as a resource stream
+        var is = getClass().getResourceAsStream("/haarcascade_frontalface_default.xml");
+        if (is == null) {
             throw new RuntimeException("❌ Haarcascade file not found in resources.");
         }
 
-        String modelPath = Paths.get(resource.toURI()).toString();
-        faceDetector = new CascadeClassifier(modelPath);
+        // Extract to a temporary file
+        File tempFile = File.createTempFile("haarcascade", ".xml");
+        tempFile.deleteOnExit();
+        Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+        faceDetector = new CascadeClassifier(tempFile.getAbsolutePath());
 
         if (faceDetector.empty()) {
-            throw new RuntimeException("❌ Failed to load Haar Cascade from: " + modelPath);
+            throw new RuntimeException("❌ Failed to load Haar Cascade from: " + tempFile.getAbsolutePath());
         }
 
     } catch (Exception e) {
         throw new RuntimeException("❌ Error initializing ComplianceCheckerService: " + e.getMessage(), e);
     }
 }
+
 
     public Map<String, Object> checkCompliance(Mat image) {
         Map<String, Object> result = new HashMap<>();
