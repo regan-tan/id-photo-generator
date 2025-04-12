@@ -1,7 +1,11 @@
 package com.example.idphotogenerator.service_alt;
 
+import java.io.File;
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,23 +24,29 @@ public class ComplianceChecker extends ImageProcessor{
     private Mat image;
     public ComplianceChecker(byte[] imageData){
         super(imageData);
-            try {
-        URL resource = getClass().getClassLoader().getResource("haarcascade_frontalface_default.xml");
-        if (resource == null) {
-            throw new RuntimeException("❌ Haarcascade file not found in resources.");
-        }
-
-        String modelPath = Paths.get(resource.toURI()).toString();
-        faceDetector = new CascadeClassifier(modelPath);
-
-        if (faceDetector.empty()) {
-            throw new RuntimeException("❌ Failed to load Haar Cascade from: " + modelPath);
-        }
-        this.image = bytesToMat(imageData);
-
-    } catch (Exception e) {
-        throw new RuntimeException("❌ Error initializing ComplianceCheckerService: " + e.getMessage(), e);
+          try {
+    // Load from classpath as InputStream
+    InputStream cascadeStream = getClass().getClassLoader().getResourceAsStream("haarcascade_frontalface_default.xml");
+    if (cascadeStream == null) {
+        throw new RuntimeException("❌ Haarcascade file not found in resources.");
     }
+
+    // Create a temporary file and copy the contents of the stream to it
+    File tempFile = File.createTempFile("haarcascade", ".xml");
+    tempFile.deleteOnExit();
+    Files.copy(cascadeStream, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+    // Load the classifier from the temp file
+    faceDetector = new CascadeClassifier(tempFile.getAbsolutePath());
+    if (faceDetector.empty()) {
+        throw new RuntimeException("❌ Failed to load Haar Cascade from: " + tempFile.getAbsolutePath());
+    }
+
+    this.image = bytesToMat(imageData);
+} catch (Exception e) {
+    throw new RuntimeException("❌ Error initializing ComplianceCheckerService: " + e.getMessage(), e);
+}
+
     }
     public Map<String, Object> checkCompliance() {
         Map<String, Object> result = new HashMap<>();
