@@ -30,13 +30,13 @@ public class BatchProcessingService {
 
         List<CompletableFuture<byte[]>> futures = new ArrayList<>();
 
-        // Submit each image for processing
+
         for (MultipartFile file : files) {
             log.info("Processing file: {}, size: {}", file.getOriginalFilename(), file.getSize());
 
             CompletableFuture<byte[]> future = CompletableFuture.supplyAsync(() -> {
                 try {
-                    // Validate file
+                 
                     if (file.isEmpty()) {
                         log.error("Empty file detected");
                         throw new IllegalArgumentException("Empty file detected");
@@ -48,8 +48,6 @@ public class BatchProcessingService {
                         throw new IllegalArgumentException("File has zero bytes");
                     }
 
-                    // Call your existing processing methods - WITH NULL RECTANGLES
-                    // This will use automatic background removal instead of manual
                     log.debug("Removing background for file: {}", file.getOriginalFilename());
                     BackgroundRemoval backgroundRemoval = new BackgroundRemoval(fileBytes, null);
                     byte[] withoutBackground = backgroundRemoval.removeBackground();
@@ -80,10 +78,9 @@ public class BatchProcessingService {
         }
 
         try {
-            // Wait for all futures to complete and collect results
-            CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
 
-            // Get all processed images
+            CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+            
             List<byte[]> results = allFutures.thenApply(v -> futures.stream()
                     .map(CompletableFuture::join)
                     .collect(Collectors.toList())).get();

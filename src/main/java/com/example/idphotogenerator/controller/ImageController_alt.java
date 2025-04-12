@@ -28,8 +28,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+// import java.util.concurrent.ExecutorService;
+// import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.Base64;
 import java.nio.file.Path;
@@ -42,9 +42,9 @@ public class ImageController_alt {
     }
     private static final Logger log = LoggerFactory.getLogger(ImageController_alt.class);
 
-    // Create a thread pool for parallel processing
-    private final ExecutorService executorService = Executors.newFixedThreadPool(
-            Math.max(2, Runtime.getRuntime().availableProcessors()));
+
+    // private final ExecutorService executorService = Executors.newFixedThreadPool(
+    //         Math.max(2, Runtime.getRuntime().availableProcessors()));
 
     private String mapColorNameToHex(String colorName) {
         // Map color names to hex codes for the ChangeBackground class
@@ -256,7 +256,7 @@ public class ImageController_alt {
                     log.info("Processing file: {}, size: {}", file.getOriginalFilename(), file.getSize());
 
                     // Create an empty map for rectangles instead of using a string
-                    ObjectMapper mapper = new ObjectMapper();
+                    // ObjectMapper mapper = new ObjectMapper();
                     Map<String, List<Double>> emptyRectangles = new HashMap<>();
 
                     // Use the correct constructor that takes a Map
@@ -328,7 +328,7 @@ public class ImageController_alt {
 
             for (MultipartFile file : files) {
                 try {
-                    ObjectMapper mapper = new ObjectMapper();
+                    // ObjectMapper mapper = new ObjectMapper();
                     Map<String, List<Double>> emptyRectangles = new HashMap<>();
 
                     BackgroundRemoval backgroundRemoval = new BackgroundRemoval(file.getBytes(), emptyRectangles);

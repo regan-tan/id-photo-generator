@@ -34,14 +34,12 @@ public class ImageProcessor{
             throw new IOException("Failed to decode image");
         }
 
-        // Convert BufferedImage to OpenCV Mat
         return bufferedImageToMat(bufferedImage);
     }
         protected Mat bytesToMat(byte[] imageData) throws IOException {
         // Convert byte array to BufferedImage
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageData));
 
-        // Convert BufferedImage to Mat
         Mat mat = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC3);
         byte[] data = new byte[image.getWidth() * image.getHeight() * (int) mat.elemSize()];
         int[] dataBuff = new int[image.getWidth() * image.getHeight()];
@@ -57,7 +55,6 @@ public class ImageProcessor{
         return mat;
     }
         protected byte[] matToBytes(Mat mat) throws IOException {
-        // Create a temporary buffer to store the image
         MatOfByte mob = new MatOfByte();
         Imgcodecs.imencode(".png", mat, mob);
         return mob.toArray();
@@ -65,19 +62,19 @@ public class ImageProcessor{
     private Mat bufferedImageToMat(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
-        Mat mat = new Mat(height, width, CvType.CV_8UC4); // 4 channels (RGBA)
+        Mat mat = new Mat(height, width, CvType.CV_8UC4);
 
         int[] pixels = new int[width * height];
         image.getRGB(0, 0, width, height, pixels, 0, width);
-        byte[] data = new byte[width * height * 4]; // RGBA storage
+        byte[] data = new byte[width * height * 4]; 
 
         for (int i = 0; i < pixels.length; i++) {
             int pixel = pixels[i];
             // Correct BGR ordering for OpenCV
-            data[i * 4] = (byte) (pixel & 0xFF);           // Blue
-            data[i * 4 + 1] = (byte) ((pixel >> 8) & 0xFF); // Green
-            data[i * 4 + 2] = (byte) ((pixel >> 16) & 0xFF); // Red
-            data[i * 4 + 3] = (byte) ((pixel >> 24) & 0xFF); // Alpha
+            data[i * 4] = (byte) (pixel & 0xFF);          
+            data[i * 4 + 1] = (byte) ((pixel >> 8) & 0xFF);
+            data[i * 4 + 2] = (byte) ((pixel >> 16) & 0xFF); 
+            data[i * 4 + 3] = (byte) ((pixel >> 24) & 0xFF); 
         }
 
         mat.put(0, 0, data);
