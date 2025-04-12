@@ -69,7 +69,7 @@ A Spring Boot web application for generating ID photos with features like backgr
 
 1. **Clone the repository**
    ```bash
-   git clone [repository-url]
+   git clone [[repository-url]](https://github.com/regan-tan/id-photo-generator.git)
    cd id-photo-generator
    ```
 
