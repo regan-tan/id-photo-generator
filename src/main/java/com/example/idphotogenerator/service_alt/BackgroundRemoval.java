@@ -28,10 +28,7 @@ public class BackgroundRemoval extends ImageProcessor {
 
     public byte[] removeBackground() throws IOException {
         // Add this check at the beginning of the method
-        if (rectangles_dim == null) {
-            // Use automated background removal instead
-            return removeBackgroundAutomatically();
-        }
+
         // Convert byte array to Mat
         Mat image = bytesToMat(imageData);
 
@@ -46,7 +43,7 @@ public class BackgroundRemoval extends ImageProcessor {
         }
         List<Rect> rectangles = new ArrayList<>();
         // Create a rectangle for initial segmentation
-        if (rectangles_dim.isEmpty()) {
+        if (rectangles_dim.isEmpty() || rectangles_dim==null) {
             Rect rect1 = new Rect(
                     resized.cols() * 25 / 100, // x (20% from left)
                     resized.rows() / 20, // y (5% from top)
@@ -230,61 +227,6 @@ public class BackgroundRemoval extends ImageProcessor {
         return rgba;
     }
 
-    // Add this new method for automatic background removal
-    private byte[] removeBackgroundAutomatically() throws IOException {
-        Mat image = Imgcodecs.imdecode(new MatOfByte(imageData), Imgcodecs.IMREAD_UNCHANGED);
-        if (image.empty()) {
-            throw new IOException("Could not decode image");
-        }
 
-        // Convert to proper color format if needed
-        Mat bgra = new Mat();
-        if (image.channels() == 3) {
-            Imgproc.cvtColor(image, bgra, Imgproc.COLOR_BGR2BGRA);
-        } else {
-            image.copyTo(bgra);
-        }
-
-        // Create a mask using automatic methods (this is simplified)
-        Mat mask = new Mat(bgra.size(), CvType.CV_8UC1);
-        Mat bgModel = new Mat();
-        Mat fgModel = new Mat();
-
-        // Create a rectangle for GrabCut that covers most of the image but leaves
-        // borders
-        int margin = (int) (Math.min(bgra.width(), bgra.height()) * 0.02); // 2% margin
-        Rect rect = new Rect(
-                margin,
-                margin,
-                bgra.width() - 2 * margin,
-                bgra.height() - 2 * margin);
-
-        // Run GrabCut
-        Imgproc.grabCut(bgra, mask, rect, bgModel, fgModel, 5, Imgproc.GC_INIT_WITH_RECT);
-
-        // Create binary mask
-        Mat binaryMask = new Mat();
-        Core.compare(mask, new Scalar(Imgproc.GC_PR_FGD), binaryMask, Core.CMP_EQ);
-        Core.compare(mask, new Scalar(Imgproc.GC_FGD), mask, Core.CMP_EQ);
-        Core.bitwise_or(binaryMask, mask, binaryMask);
-
-        // Apply mask
-        Mat foreground = new Mat(bgra.size(), CvType.CV_8UC4, new Scalar(0, 0, 0, 0));
-        bgra.copyTo(foreground, binaryMask);
-
-        // Encode and return
-        MatOfByte matOfByte = new MatOfByte();
-        Imgcodecs.imencode(".png", foreground, matOfByte);
-        // Clean up resources
-        image.release();
-        bgra.release();
-        mask.release();
-        bgModel.release();
-        fgModel.release();
-        binaryMask.release();
-        foreground.release();
-
-        return matOfByte.toArray(); // Convert MatOfByte to byte array and return it
-    }
 
 }
