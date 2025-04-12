@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <title>ID Photo Generator</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
         <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
@@ -22,20 +22,15 @@
             <!-- Instructions Alert - Initially Visible -->
             <div class="container mt-3">
                 <div class="alert alert-info alert-dismissible fade show instruction-alert" role="alert" id="instructionAlert">
-                    <h5><i class="fas fa-info-circle me-2"></i>Quick Start Guide</h5>
-                    <ol class="mb-0 ps-3">
-                        <li>Upload your photo using the <strong>Import from local file</strong> button or drag photo picture to Image Workspace</li>
-                        <li>Set the photo dimensions and crop your image</li>
-                        <li>Remove background manually or automatically</li>
-                        <li>Select a background color or choose by country</li>
-                        <li>Use the enhancement tools if needed</li>
-                        <li>Export your photo in your preferred format</li>
+                    <h5 class="d-flex align-items-center"><i class="fas fa-info-circle me-2"></i>Quick Start Guide</h5>
+                    <ol class="mb-0 ps-3 small">
+                        <li>Upload your photo or drag it to Image Workspace</li>
+                        <li>Set dimensions and crop your image</li>
+                        <li>Remove background automatically</li>
+                        <li>Select background color</li>
+                        <li>Use enhancement tools if needed</li>
+                        <li>Export your photo</li>
                     </ol>
-                    <p class="mt-2 mb-0">
-                        <small
-                            >Need to undo a change? Use the <span class="badge bg-secondary"><i class="fas fa-undo"></i> Undo</span> button at the top of your workspace</small
-                        >
-                    </p>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             </div>
@@ -47,13 +42,13 @@
                         <!-- Image Container -->
                         <div class="sticky-container">
                             <div class="card">
-                                <div class="card-header d-flex justify-content-between align-items-center">
+                                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <h5 class="card-title mb-0">Image Workspace</h5>
                                     <!-- Undo Button - Moved to more accessible location -->
                                     <button id="undoBtn" class="btn btn-sm btn-secondary" disabled><i class="fas fa-undo me-1"></i>Undo Last Change</button>
                                 </div>
                                 <div class="card-body p-4">
-                                    <div class="image-container">
+                                    <div class="image-container mx-auto">
                                         <img id="image" class="img-fluid" style="display: none" />
                                         <div id="placeholder" class="upload-placeholder">
                                             <i class="fas fa-cloud-upload-alt"></i>
@@ -102,7 +97,7 @@
                                     <div class="feature-group">
                                         <h6 class="feature-group-title"><span class="step-badge">2</span> Background Options</h6>
                                         <div class="mb-3">
-                                            <div class="d-flex flex-wrap gap-2 mb-2 align-items-center">
+                                            <div class="d-flex flex-wrap gap-1 mb-2 align-items-center justify-content-center">
                                                 <!-- Predefined color buttons -->
                                                 <button class="color-btn" data-color="#FFFFFF" style="background-color: #ffffff" title="White - Standard Passport"></button>
                                                 <button class="color-btn" data-color="#87CEEB" style="background-color: #87ceeb" title="Light Blue - General ID"></button>
