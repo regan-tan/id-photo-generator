@@ -54,7 +54,7 @@ public class ImageController_alt {
         colorMap.put("black", "#000000");
         colorMap.put("red", "#FF0000");
         colorMap.put("green", "#00FF00");
-        colorMap.put("blue", "#87CEEB");  // Light blue
+        colorMap.put("blue", "#87CEEB");
         colorMap.put("yellow", "#FFFF00");
         colorMap.put("gray", "#808080");
 
@@ -363,6 +363,4 @@ public class ImageController_alt {
             return ResponseEntity.internalServerError().build();
         }
     }
-    // cloud feature: list google drive image files
-    // Download image by fileID
 }
