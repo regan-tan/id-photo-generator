@@ -4,10 +4,7 @@ import org.opencv.core.*;
 
 import org.opencv.imgproc.Imgproc;
 
-
 import java.io.IOException;
-
-
 
 public class PhotoEnhancement extends ImageProcessor{
     private int brightness;
@@ -51,8 +48,6 @@ public class PhotoEnhancement extends ImageProcessor{
         double beta = brightness; 
         
         enhancedImage.convertTo(enhancedImage, -1, alpha, beta);
-        
-
     }
         private void smoothSkin() {
       
