@@ -1,7 +1,6 @@
 package com.example.idphotogenerator.service_alt;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
@@ -11,10 +10,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 
-
 import nu.pattern.OpenCV;
-
-
 
 public class ImageProcessor{
     protected byte[] imageData;
